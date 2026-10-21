@@ -44,7 +44,15 @@
     <string name="notification_stop">Стоп</string>
 
     <!-- Accessibility service -->
-    <string name="accessibility_service_description">GestureControl использует эту службу только для того, чтобы узнать, какое приложение сейчас на экране, и включать жесты только в выбранных вами приложениях. Служба не читает содержимое экрана и вводимый текст.</string>
+    <string name="accessibility_service_description">GestureControl использует эту службу, чтобы узнать, какое приложение на экране (жесты работают только в выбранных), показать курсор руки и выполнять нажатия, прокрутку и действия «Назад» / «Домой», которые вы вызываете рукой. Служба не читает содержимое экрана и вводимый текст и ничего не сохраняет.</string>
+
+    <!-- Hints next to the cursor -->
+    <string name="hint_gesture_cancelled">Нажатие не прошло</string>
+    <string name="hint_gesture_rejected">Система не приняла жест</string>
+    <string name="hint_secure_window">Защищённое окно: нажатия могут не работать</string>
+    <string name="hint_action_unavailable">Это действие недоступно</string>
+    <string name="hint_screen_locked">Экран заблокирован</string>
+    <string name="hint_accessibility_off">Включите службу специальных возможностей GestureControl</string>
 
     <!-- App selection -->
     <string name="apps_title">Выбор приложений</string>

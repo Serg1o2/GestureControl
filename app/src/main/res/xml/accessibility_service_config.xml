@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only window state changes; no window content access. -->
+<!--
+    typeWindowStateChanged: foreground app detection.
+    canPerformGestures: taps and swipes for zones and the cursor.
+    canRetrieveWindowContent + flagRetrieveInteractiveWindows: list of windows (ids only), needed
+    to find the active app window for the secure-window check. Window content is never read.
+    canTakeScreenshot: secure-window check on Android 14+; the image buffer is closed unread.
+-->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeWindowStateChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:accessibilityFlags="flagDefault"
-    android:canRetrieveWindowContent="false"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
+    android:canPerformGestures="true"
+    android:canRetrieveWindowContent="true"
+    android:canTakeScreenshot="true"
     android:description="@string/accessibility_service_description"
     android:notificationTimeout="100" />

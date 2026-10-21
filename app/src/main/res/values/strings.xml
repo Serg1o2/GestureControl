@@ -45,7 +45,15 @@
     <string name="notification_stop">Stop</string>
 
     <!-- Accessibility service -->
-    <string name="accessibility_service_description">GestureControl uses this service only to find out which app is currently on screen, so that hand gestures work only in the apps you selected. It does not read screen content or what you type.</string>
+    <string name="accessibility_service_description">GestureControl uses this service to find out which app is on screen (gestures work only in the apps you selected), to show the hand cursor and to perform taps, swipes and Back / Home actions that you trigger with your hand. It does not read screen content or what you type, and stores nothing.</string>
+
+    <!-- Hints next to the cursor -->
+    <string name="hint_gesture_cancelled">The tap did not go through</string>
+    <string name="hint_gesture_rejected">The system rejected the gesture</string>
+    <string name="hint_secure_window">Protected window: taps may not work</string>
+    <string name="hint_action_unavailable">This action is not available</string>
+    <string name="hint_screen_locked">The screen is locked</string>
+    <string name="hint_accessibility_off">Turn on the GestureControl accessibility service</string>
 
     <!-- App selection -->
     <string name="apps_title">Choose apps</string>
