@@ -28,6 +28,11 @@ import com.gesturecontrol.data.InstalledAppsRepository
 import com.gesturecontrol.data.SelectedAppsRepository
 import com.gesturecontrol.data.SettingsRepository
 import com.gesturecontrol.data.ZoneRepository
+import com.gesturecontrol.data.CustomGestureRepository
+import com.gesturecontrol.data.toTemplate
+import com.gesturecontrol.actions.ActionExecutor
+import com.gesturecontrol.gestures.custom.ActionSpec
+import com.gesturecontrol.gestures.custom.CustomGestureRecognizer
 import com.gesturecontrol.gestures.Gesture
 import com.gesturecontrol.gestures.GestureConfig
 import com.gesturecontrol.gestures.GestureEngine
@@ -79,6 +84,12 @@ class GestureService : LifecycleService() {
     @Inject lateinit var zones: ZoneRepository
     @Inject lateinit var bridge: PointerBridge
     @Inject lateinit var classifierFactory: PoseClassifierFactory
+    @Inject lateinit var customGestures: CustomGestureRepository
+    @Inject lateinit var actionExecutor: ActionExecutor
+
+    /** Custom gestures of the app on screen (plus global); read on the analysis thread. */
+    private val customRecognizer = CustomGestureRecognizer(emptyList())
+    @Volatile private var customActions: Map<Long, ActionSpec> = emptyMap()
 
     /** Classifiers of the current binding; closed on the analysis thread after unbind. */
     private var classifiers: PoseClassifiers? = null
@@ -129,6 +140,7 @@ class GestureService : LifecycleService() {
         if (gateJob == null) {
             gateJob = lifecycleScope.launch { observeGate() }
             lifecycleScope.launch { observePointerInputs() }
+            lifecycleScope.launch { observeCustomGestures() }
         }
         return START_NOT_STICKY
     }
@@ -176,6 +188,20 @@ class GestureService : LifecycleService() {
             }
             status to key
         }.distinctUntilChanged().collect { (status, key) -> apply(status, key) }
+    }
+
+    /** Custom gestures of the app on screen plus the global profile, parsed off the main thread. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private suspend fun observeCustomGestures() {
+        foregroundApps.foregroundPackage
+            .flatMapLatest { pkg -> customGestures.activeFor(pkg) }
+            .collect { entities ->
+                val parsed = withContext(Dispatchers.Default) {
+                    entities.mapNotNull { e -> runCatching { e.toTemplate() to ActionSpec.decode(e.action) }.getOrNull() }
+                }
+                customActions = parsed.associate { (t, a) -> t.id to a }
+                customRecognizer.templates = parsed.map { it.first }
+            }
     }
 
     /** Keeps the pointer engine's calibration and the zones of the app on screen up to date. */
@@ -262,6 +288,11 @@ class GestureService : LifecycleService() {
 
     /** Called on the analysis thread. */
     private fun onAnalysisResult(result: AnalysisResult) {
+        if (customRecognizer.templates.isNotEmpty()) {
+            customRecognizer.process(result.frame)?.let { match ->
+                customActions[match.template.id]?.let(actionExecutor::execute)
+            }
+        }
         result.event?.let { event ->
             when (event.gesture) {
                 Gesture.FINGER_LEFT, Gesture.FINGER_RIGHT -> {
