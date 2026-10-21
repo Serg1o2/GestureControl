@@ -56,7 +56,7 @@ def batches(x, y, batch, rng, augment):
         yield xb, y[b]
 
 
-def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 1024) -> dict:
+def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 1024, oversample: int = 5) -> dict:
     import tensorflow as tf
 
     tf.keras.utils.set_random_seed(SEED)
@@ -64,8 +64,13 @@ def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 
     n = len(POSE_CLASSES)
     tr = data["split"] == 0
     va = data["split"] == 1
-    xtr, ytr = data["x"][tr], data["y"][tr]
+    # Landmarks from our MediaPipe version (sources 1, 2) match the app best: repeat them `oversample` times.
+    tr_idx = np.where(tr)[0]
+    own = tr_idx[data["source"][tr_idx] > 0]
+    tr_idx = np.concatenate([tr_idx] + [own] * (oversample - 1))
+    xtr, ytr = data["x"][tr_idx], data["y"][tr_idx]
     xva, yva = data["x"][va], data["y"][va]
+    own_va = data["source"][va] > 0
     print(f"train {len(xtr)}  val {len(xva)}  classes {np.bincount(ytr, minlength=n).tolist()}")
 
     model = build_model(n)
@@ -81,7 +86,9 @@ def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 
         losses = []
         for xb, yb in batches(xtr, ytr, batch, rng, augment=True):
             losses.append(model.train_on_batch(xb, yb, sample_weight=sw_table[yb])[0])
-        val_acc = float((model.predict(xva, batch_size=8192, verbose=0).argmax(1) == yva).mean())
+        hits = model.predict(xva, batch_size=8192, verbose=0).argmax(1) == yva
+        # Selection score: mean of all-val accuracy and our-MediaPipe val accuracy (closest to the app).
+        val_acc = float(hits.mean()) if not own_va.any() else float((hits.mean() + hits[own_va].mean()) / 2)
         history.append({"epoch": epoch + 1, "loss": float(np.mean(losses)), "val_acc": val_acc})
         print(f"epoch {epoch + 1}/{epochs} loss {np.mean(losses):.4f} val_acc {val_acc:.4f} ({time.time() - t0:.0f}s)")
         if val_acc > best:
@@ -146,11 +153,12 @@ def main() -> None:
     ap.add_argument("--features", nargs="+", type=Path, required=True)
     ap.add_argument("--out", type=Path, default=ROOT / "artifacts" / "static")
     ap.add_argument("--epochs", type=int, default=25)
+    ap.add_argument("--oversample", type=int, default=5, help="repeat factor for our-MediaPipe and own samples")
     ap.add_argument("--report", type=Path, default=ROOT / "artifacts" / "static" / "report.md")
     args = ap.parse_args()
 
     data = load(args.features)
-    info = train(data, args.out, args.epochs)
+    info = train(data, args.out, args.epochs, oversample=args.oversample)
 
     import tensorflow as tf
 
@@ -161,6 +169,7 @@ def main() -> None:
     probs_te = model.predict(data["x"][te], batch_size=8192, verbose=0)
 
     md = ["## Static pose model (Keras, test split by person)", ""]
+    thresholded: dict = {}
     for src, name in [(None, "all test"), (0, "HaGRID annotations"), (1, "HaGRID re-extracted (our MediaPipe)"), (2, "my recordings")]:
         mask = np.ones(te.sum(), bool) if src is None else data["source"][te] == src
         if mask.sum() == 0:
@@ -169,6 +178,7 @@ def main() -> None:
         md.append(markdown(rep, POSE_CLASSES, f"{name}, argmax"))
         rep_t = report(data["y"][te][mask], probs_te[mask], POSE_CLASSES, pred=apply_thresholds(probs_te[mask], thresholds))
         md.append(markdown(rep_t, POSE_CLASSES, f"{name}, with per-class thresholds {thresholds}"))
+        thresholded[src] = rep_t
 
     fpath, qpath = export_tflite(args.out / "pose_mlp.keras", args.out, data["x"][data["split"] == 0][:1000])
     sample = data["x"][te][:2000]
@@ -198,6 +208,15 @@ def main() -> None:
         "train_info": {"best_val_acc": info["best_val_acc"], "epochs": args.epochs, "seed": SEED},
     }
     (args.out / "pose_mlp.json").write_text(json.dumps(meta, indent=2))
+    goals = []
+    for src, label in [(0, "HaGRID test (annotation landmarks)"), (1, "HaGRID test (our MediaPipe, true aspect)")]:
+        r = thresholded.get(src)
+        if r:
+            goals.append({"goal": f"Static poses, accuracy ≥ 95%: {label}", "value": f"{r['accuracy'] * 100:.2f}%", "status": "✅" if r["accuracy"] >= 0.95 else "❌"})
+            goals.append({"goal": f"Background false positives ≤ 2% per frame: {label}", "value": f"{r['background_fp_rate'] * 100:.2f}%", "status": "✅" if r["background_fp_rate"] <= 0.02 else "❌"})
+    goals.append({"goal": "My phone recordings ≥ 90% after fine-tuning", "value": "no recordings yet", "status": "⏳"})
+    goals.append({"goal": "Inference ≤ 5 ms on the phone", "value": f"model {qpath.stat().st_size} B; measured by connectedDebugAndroidTest", "status": "⏳"})
+    (args.out / "summary.json").write_text(json.dumps({"goals": goals}, ensure_ascii=False, indent=2), encoding="utf-8")
     args.report.write_text("\n".join(md), encoding="utf-8")
     print("\n".join(md))
     print(json.dumps(parity))
