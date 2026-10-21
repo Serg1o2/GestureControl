@@ -21,27 +21,35 @@ After each change: `assembleDebug` and `:gestures:test` must pass before committ
 
 ## Architecture
 
-- `:gestures` — **pure Kotlin/JVM module, no Android dependencies allowed.** All gesture logic lives here so it can be unit-tested on recorded landmark sequences: `GestureEngine` (state machine), `SwipeDetector`, `StaticGestureClassifier`, `OneEuroFilter`, `PowerSaveThrottler`, `LandmarkCsv`, `GestureConfig`.
+- `:gestures` — **pure Kotlin/JVM module, no Android dependencies allowed.** All gesture and coordinate logic lives here so it can be unit-tested on recorded landmark sequences:
+  - root package: `GestureEngine` (media gestures state machine), `SwipeDetector`, `StaticGestureClassifier` (poses + pinch ratio), `OneEuroFilter`, `PowerSaveThrottler`, `LandmarkCsv`, `GestureConfig`;
+  - `mapping/`: `ScreenMapper` + `Calibration` (3-point affine frame→screen), `CalibrationCapture`, `Zone`/`ZoneAction`/`ZoneSet` (hit test), `CommandPlanner` (press/scroll → `TouchCommand`), `NormPoint`/`NormRect`;
+  - `pointer/`: `PointerEngine` (cursor, pinch/dwell press, two-finger scroll), `CursorSmoother` (One Euro + dead zone), `ScrollDetector`, `PointerConfig`.
 - `:app` packages:
   - `camera/` CameraX binding (front camera, ImageAnalysis RGBA, optional Preview). The camera provider is shared: unbind only own use cases, never `unbindAll()`.
-  - `vision/` MediaPipe wrapper (VIDEO mode, CPU) and `HandAnalyzer` (rotate + mirror to user-view coordinates → landmarks → engine). Everything runs on the single analysis thread.
-  - `actions/` `Action` interface, media keys via `AudioManager.dispatchMediaKeyEvent`, fixed gesture→action map in `ActionDispatcher`.
-  - `service/` `GestureService` camera foreground service + shared `GestureServiceState`.
-  - `accessibility/` `ForegroundAppService` reports the foreground app (activities only) to `ForegroundAppTracker`.
-  - `data/` Room (`selected_apps`), DataStore settings, installed app list.
-  - `ui/` Compose screens: main, app selection, debug (preview + 21-point overlay + CSV recorder).
+  - `vision/` MediaPipe wrapper (VIDEO mode, CPU) and `HandAnalyzer` (rotate + mirror to user-view coordinates → landmarks → `GestureEngine` + optional `PointerEngine`). Everything runs on the single analysis thread.
+  - `actions/` media keys via `AudioManager.dispatchMediaKeyEvent`, fixed gesture→action map in `ActionDispatcher`.
+  - `service/` `GestureService` camera foreground service + shared `GestureServiceState`. Routes pointer output to `PointerBridge`; zones and calibration are updated live, other pointer settings rebind the camera.
+  - `accessibility/` `ForegroundAppService`: foreground app (activities only) → `ForegroundAppTracker`; `CursorOverlay` (TYPE_ACCESSIBILITY_OVERLAY, non-touchable, attached only when needed); `GestureExecutor` (`dispatchGesture` with cancel/reject → hints, global actions); `SecureWindowProbe` (FLAG_SECURE via `takeScreenshotOfWindow`, API 34+, buffer closed unread); `PointerBridge` (in-process link to the service).
+  - `data/` Room v2 (`selected_apps`, `zones`, auto-migration 1→2, schemas in `app/schemas`), DataStore settings incl. `PointerSettings` and calibration, installed app list.
+  - `ui/` Compose: main, app selection, debug (preview + overlay + pointer info + CSV recorder), accessibility disclosure, zone list/editor, cursor settings, calibration wizard.
 - DI: Hilt. Async: coroutines/Flow.
 
 ## Key rules
 
-- Landmark coordinates in `:gestures` are "user view": upright, mirrored; x grows toward the user's right. The conversion happens only in `HandAnalyzer`.
-- Every gesture threshold (distance, velocity, time) goes into `GestureConfig` / `PowerSaveConfig`, never hard-coded in detectors.
-- Android 14+: the camera FGS may only be started from a visible screen (`GestureService.start` from the main screen). The service is `START_NOT_STICKY` and never restarts itself from the background; it binds/unbinds the camera instead.
-- Privacy: frames are never stored or sent. No network: `INTERNET`/`ACCESS_NETWORK_STATE` are removed in the manifest (MediaPipe adds them). The recorder writes landmark coordinates only. Keep `docs/privacy.md` in sync with any data change.
+- Landmark coordinates in `:gestures` are "user view": upright, mirrored; x grows toward the user's right. The conversion happens only in `HandAnalyzer`. Screen coordinates are normalized [0, 1] of the real (full) screen; pixels appear only in `GestureExecutor`/`CursorOverlay`.
+- Every threshold goes into `GestureConfig` / `PointerConfig` / `PowerSaveConfig`, never hard-coded in detectors. Never use landmark z as a trigger.
+- Coordinate mapping, zones and hit testing stay pure and unit-tested.
+- Android 14+: the camera FGS may only be started from a visible screen (`GestureService.start` from the main screen). The service is `START_NOT_STICKY` and never restarts itself from the background; it binds/unbinds the camera instead. In-app camera screens (debug, calibration) set `GestureServiceState.debugPreviewActive` so the service releases the camera.
+- Accessibility failures (cancelled/rejected gesture, secure window, locked screen) show a rate-limited hint next to the cursor; never crash.
+- Privacy: frames are never stored or sent. No network: `INTERNET`/`ACCESS_NETWORK_STATE` are removed in the manifest (MediaPipe adds them). The recorder writes landmark coordinates only. Keep `docs/privacy.md` and the disclosure screen in sync with any data or capability change.
 - Code comments in English. All UI strings in `res/values/strings.xml` (English, default) and `res/values-ru/strings.xml` (Russian).
 - Gesture tests: add real recordings to `gestures/src/test/resources/sequences/` with a `# expect: GESTURE,...` line; `RecordedSequenceTest` replays all of them.
-- Small commits with clear messages.
+- Small commits with clear messages; commit only after build and tests are green.
 
 ## Scope
 
-Stage 1 (done): swipe left/right, open palm hold, media actions, foreground service, app selection, accessibility-based gating, power saving. Do not add stage-2 features (tap zones / dispatchGesture, custom gestures, gesture assignment UI) unless asked.
+- Stage 1 (done): swipe left/right, open palm hold, media actions, foreground service, app selection, accessibility-based gating, power saving.
+- Stage 2 (done): cursor overlay, pinch/dwell press, per-app screen zones with actions, two-finger scroll, 3-point calibration, secure-window handling, accessibility disclosure. One zone set and one calibration per app (portrait), by the owner's decision.
+- Stage 3 (not started): custom gestures and model training. Do not add unless asked.
+- Personal, non-commercial app: Google Play policy constraints are not a blocker.
