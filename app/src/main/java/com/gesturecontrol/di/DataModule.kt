@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.gesturecontrol.data.AppDatabase
 import com.gesturecontrol.data.SelectedAppDao
+import com.gesturecontrol.data.ZoneDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,4 +23,7 @@ object DataModule {
 
     @Provides
     fun provideSelectedAppDao(db: AppDatabase): SelectedAppDao = db.selectedAppDao()
+
+    @Provides
+    fun provideZoneDao(db: AppDatabase): ZoneDao = db.zoneDao()
 }

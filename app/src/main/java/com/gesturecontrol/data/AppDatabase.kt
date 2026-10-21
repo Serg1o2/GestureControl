@@ -1,5 +1,6 @@
 package com.gesturecontrol.data
 
+import androidx.room.AutoMigration
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Entity
@@ -26,7 +27,13 @@ interface SelectedAppDao {
     suspend fun delete(packageName: String)
 }
 
-@Database(entities = [SelectedApp::class], version = 1, exportSchema = true)
+@Database(
+    entities = [SelectedApp::class, ZoneEntity::class],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun selectedAppDao(): SelectedAppDao
+    abstract fun zoneDao(): ZoneDao
 }
