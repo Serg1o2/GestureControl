@@ -18,7 +18,7 @@ def read(path: Path) -> str:
 
 
 def stats(path: Path) -> dict:
-    return json.loads(path.read_text()) if path.exists() else {}
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
 def main() -> None:
@@ -49,7 +49,7 @@ def main() -> None:
         "",
         f"- HaGRIDv2, точки из разметки: {ann.get('kept', '?')} рук (train/val/test {ann.get('per_split', '?')}), соотношение сторон принято {ann.get('aspect', '?')}.",
         f"- HaGRIDv2, выборка фото через наш MediaPipe 0.10.20: {mp.get('hands', '?')} рук; рука не найдена в {mp.get('loss_rate', 0) * 100:.1f}% размеченных случаев.",
-        f"- IPN Hand, окна по 24 кадра: {dyn.get('windows', 'не обработан')} (по классам {dyn.get('per_class', '—')}); доля кадров без руки внутри жестов: {dyn.get('hand_missing_rate_in_segments', 0) * 100:.1f}%.",
+        (f"- IPN Hand, окна по 24 кадра: {dyn['windows']} (по классам {dyn['per_class']}); доля кадров без руки внутри жестов: {dyn['hand_missing_rate_in_segments'] * 100:.1f}%." if dyn else "- IPN Hand: ещё не обработан (видео загружаются)."),
         "",
         read(ART / "static" / "report.md"),
         "",

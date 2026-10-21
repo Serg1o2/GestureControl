@@ -178,6 +178,32 @@ def build_windows(out: Path, stride_neg: int = 6, seed: int = 42) -> dict:
     return stats
 
 
+def check_mirror() -> dict:
+    """Mean palm x travel (user view, in hand sizes) over G05 'throw left' / G06 'throw right' segments.
+
+    With correct mirroring, throw left must move toward negative x (the user's left).
+    """
+    classes = {int(l.split()[0]): l.split()[1] for l in (RAW / "annotations" / "classIndAll.txt").read_text().split("\n") if l.strip()}
+    travel: dict[str, list[float]] = {"G05": [], "G06": []}
+    for list_name in ("trainlistall.txt", "vallistall.txt"):
+        for video, cls_id, start, end in read_list(RAW / "annotations" / list_name):
+            label = classes[cls_id]
+            f = LANDMARKS / f"{video}.npz"
+            if label not in travel or not f.exists():
+                continue
+            d = np.load(f)
+            lm, present, aspect = d["lm"][start - 1:end], d["present"][start - 1:end], float(d["aspect"])
+            if present.sum() < 4:
+                continue
+            palm = lm[present][:, [0, 5, 9, 13, 17], 0].mean(1) * aspect
+            size = np.nanmean(np.linalg.norm((lm[present][:, 9] - lm[present][:, 0]) * [aspect, 1], axis=1))
+            travel[label].append(float((palm[-1] - palm[0]) / max(size, 1e-6)))
+    result = {k: {"n": len(v), "mean_dx_hand_sizes": float(np.mean(v)) if v else None} for k, v in travel.items()}
+    ok = result["G05"]["n"] and result["G06"]["n"] and result["G05"]["mean_dx_hand_sizes"] < 0 < result["G06"]["mean_dx_hand_sizes"]
+    result["mirroring_consistent"] = bool(ok)
+    return result
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -187,6 +213,7 @@ def main() -> None:
     e.add_argument("--workers", type=int, default=8)
     e.add_argument("--limit", type=int, default=None)
     sub.add_parser("windows")
+    sub.add_parser("check-mirror")
     args = ap.parse_args()
     if args.cmd == "download":
         download()
@@ -196,6 +223,8 @@ def main() -> None:
         extract(args.workers, args.limit)
     elif args.cmd == "windows":
         print(build_windows(ROOT / "data" / "features" / "dynamic_ipn.npz"))
+    elif args.cmd == "check-mirror":
+        print(check_mirror())
 
 
 if __name__ == "__main__":

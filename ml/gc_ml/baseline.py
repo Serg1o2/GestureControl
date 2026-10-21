@@ -68,10 +68,23 @@ def collect(per_class: int, workers: int) -> None:
         download(RECOGNIZER_URL, recognizer)
     landmarker = ROOT.parent / "app" / "src" / "main" / "assets" / "hand_landmarker.task"
     members = zip_directory(IMAGES_512_URL, RAW / "hagridv2_512_directory.json")
+    # Only photos of test-split people: the pose model never saw them (no leakage).
+    import zipfile
+
+    from .hagrid import split_of
+
+    test_ids = set()
+    with zipfile.ZipFile(RAW / "annotations.zip") as zf:
+        for name in zf.namelist():
+            if name.endswith(".json"):
+                for image_id, a in json.loads(zf.read(name)).items():
+                    if split_of(name, str(a.get("user_id", image_id))) == 2:
+                        test_ids.add(image_id)
     rng = np.random.default_rng(7)
     by_class: dict[str, list[dict]] = {}
     for m in members:
-        by_class.setdefault(Path(m["name"]).parent.name, []).append(m)
+        if Path(m["name"]).stem in test_ids:
+            by_class.setdefault(Path(m["name"]).parent.name, []).append(m)
     chosen = [(m, cls) for cls, ms in sorted(by_class.items()) if not cls.startswith(".")
               for m in (ms[i] for i in rng.permutation(len(ms))[:per_class])]
     chunks = [chosen[i::workers] for i in range(workers)]
@@ -106,7 +119,9 @@ def evaluate() -> None:
     onehot = lambda p: np.eye(len(POSE_CLASSES))[p]
     md = ["## Baseline: MediaPipe Gesture Recognizer vs pose_mlp (same HaGRID photos)", "",
           f"Photos: {len(rows)}, hand found by our landmarker: {has.mean() * 100:.1f}%. "
-          "Images where no hand is found count as OTHER for both.", ""]
+          "Images where no hand is found count as OTHER for both. Photos are of test-split people only. "
+          "Many HaGRID photos show two hands; both systems look for one hand and may pick the hand without the "
+          "gesture, so gesture recall here is a lower bound.", ""]
     md.append(markdown(report(y, onehot(mp_pred), POSE_CLASSES), POSE_CLASSES, "MediaPipe Gesture Recognizer"))
     md.append(markdown(report(y, onehot(ours), POSE_CLASSES), POSE_CLASSES, "pose_mlp (quantized TFLite, thresholds)"))
     (OUT / "report.md").write_text("\n".join(md), encoding="utf-8")
