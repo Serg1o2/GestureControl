@@ -12,7 +12,6 @@ import android.os.SystemClock
 import android.util.Size
 import android.view.View
 import android.view.WindowManager
-import com.gesturecontrol.gestures.mapping.NormPoint
 
 /**
  * Full-screen, non-touchable accessibility overlay that draws the cursor, the hovered zone,
@@ -113,17 +112,23 @@ class CursorOverlay(private val context: Context, private val screenSize: () -> 
         }
         private val arc = RectF()
 
-        /** Normalized screen point to this view's coordinates. */
-        private fun toView(p: NormPoint): Pair<Float, Float> {
-            val size = screenSize()
-            getLocationOnScreen(location)
-            return p.x * size.width - location[0] to p.y * size.height - location[1]
-        }
+        private var screenW = 0
+        private var screenH = 0
+
+        // Normalized screen coordinates to this view's coordinates (no allocations: called per frame).
+        private fun viewX(nx: Float) = nx * screenW - location[0]
+        private fun viewY(ny: Float) = ny * screenH - location[1]
 
         override fun onDraw(canvas: Canvas) {
+            val size = screenSize()
+            screenW = size.width
+            screenH = size.height
+            getLocationOnScreen(location)
             state.hoveredZone?.let { zone ->
-                val (l, t) = toView(NormPoint(zone.left, zone.top))
-                val (r, b) = toView(NormPoint(zone.right, zone.bottom))
+                val l = viewX(zone.left)
+                val t = viewY(zone.top)
+                val r = viewX(zone.right)
+                val b = viewY(zone.bottom)
                 canvas.drawRect(l, t, r, b, zoneFill)
                 canvas.drawRect(l, t, r, b, zoneStroke)
             }
@@ -131,7 +136,8 @@ class CursorOverlay(private val context: Context, private val screenSize: () -> 
             var anchorX = width / 2f
             var anchorY = height * 0.85f
             if (cursor != null) {
-                val (x, y) = toView(cursor)
+                val x = viewX(cursor.x)
+                val y = viewY(cursor.y)
                 anchorX = x
                 anchorY = y
                 val radius = CURSOR_DP * density

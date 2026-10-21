@@ -14,6 +14,9 @@ import com.gesturecontrol.gestures.GestureEngine
 import com.gesturecontrol.gestures.Landmark
 import com.gesturecontrol.gestures.PowerSaveConfig
 import com.gesturecontrol.gestures.PowerSaveThrottler
+import com.gesturecontrol.gestures.pointer.PointerEngine
+import com.gesturecontrol.gestures.pointer.PointerEvent
+import com.gesturecontrol.gestures.pointer.PointerOutput
 import com.gesturecontrol.data.SettingsRepository
 import com.gesturecontrol.service.GestureServiceState
 import kotlinx.coroutines.flow.first
@@ -38,6 +41,8 @@ data class DebugUiState(
     val engineState: EngineState = EngineState.NoHand,
     val fps: Float = 0f,
     val powerSaving: Boolean = false,
+    val pointer: PointerOutput? = null,
+    val lastPointerEvent: PointerEvent? = null,
     val lastGesture: Gesture? = null,
     val executeActions: Boolean = false,
     val recordingFrames: Int? = null,
@@ -68,7 +73,9 @@ class DebugViewModel @Inject constructor(
             val engine = landmarker ?: withContext(Dispatchers.Default) { HandLandmarkerEngine(context) }
                 .also { landmarker = it }
             val throttler = PowerSaveThrottler(PowerSaveConfig(enabled = settings.powerSaveEnabled.first()))
-            val analyzer = HandAnalyzer(engine, GestureEngine(GestureConfig()), throttler, onResult = ::onResult)
+            val pointerSettings = settings.pointerSettings.first()
+            val pointer = PointerEngine(pointerSettings.toConfig()).also { it.mapper = pointerSettings.mapper }
+            val analyzer = HandAnalyzer(engine, GestureEngine(GestureConfig()), throttler, pointer, onResult = ::onResult)
             camera.bind(owner, analyzer, rotation, surfaceProvider)
         }
     }
@@ -96,6 +103,8 @@ class DebugViewModel @Inject constructor(
                 engineState = result.state,
                 fps = result.fps,
                 powerSaving = result.powerSaving,
+                pointer = result.pointer,
+                lastPointerEvent = result.pointer?.event ?: it.lastPointerEvent,
                 lastGesture = result.event?.gesture ?: it.lastGesture,
             )
         }

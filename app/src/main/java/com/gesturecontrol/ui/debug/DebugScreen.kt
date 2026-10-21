@@ -100,6 +100,20 @@ private fun DebugContent(viewModel: DebugViewModel) {
                     if (state.powerSaving) " · " + stringResource(R.string.debug_power_save_on) else "",
             )
             Text(stringResource(R.string.debug_last_gesture, state.lastGesture?.label() ?: stringResource(R.string.debug_none)))
+            val pointer = state.pointer
+            Text(
+                stringResource(
+                    R.string.debug_pointer,
+                    pointer?.pose?.name ?: stringResource(R.string.debug_none),
+                    pointer?.pinchRatio?.let { "%.2f".format(it) } ?: stringResource(R.string.debug_none),
+                    pointer?.cursor?.let { "%.2f, %.2f".format(it.x, it.y) } ?: stringResource(R.string.debug_none),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                stringResource(R.string.debug_last_pointer_event, state.lastPointerEvent?.toString() ?: stringResource(R.string.debug_none)),
+                style = MaterialTheme.typography.bodySmall,
+            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = state.executeActions, onCheckedChange = viewModel::setExecuteActions)
                 Spacer(Modifier.width(12.dp))

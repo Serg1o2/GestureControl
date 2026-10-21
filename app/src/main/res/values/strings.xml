@@ -51,7 +51,6 @@
     <string name="main_cursor_section">Cursor and zones</string>
     <string name="main_cursor_desc">Point with your index finger to move the cursor; pinch thumb and index to tap. Zones assign actions to screen areas of each app.</string>
     <string name="main_zones_open">Screen zones</string>
-    <string name="main_cursor_settings_open">Cursor settings and calibration</string>
     <string name="cursor_settings_title">Cursor</string>
     <string name="cursor_enabled">Cursor</string>
     <string name="cursor_enabled_desc">The index finger moves a cursor in the selected apps</string>
@@ -130,6 +129,8 @@
     <string name="debug_last_gesture">Last gesture: %1$s</string>
     <string name="debug_none">—</string>
     <string name="debug_execute_actions">Execute actions</string>
+    <string name="debug_pointer">Pose: %1$s · pinch: %2$s · cursor: %3$s</string>
+    <string name="debug_last_pointer_event">Last cursor event: %1$s</string>
     <string name="debug_record_start">Record landmarks</string>
     <string name="debug_record_stop">Stop recording · frames: %1$d</string>
     <string name="debug_record_saved">Saved: %1$s</string>

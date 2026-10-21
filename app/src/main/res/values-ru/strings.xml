@@ -50,7 +50,6 @@
     <string name="main_cursor_section">Курсор и зоны</string>
     <string name="main_cursor_desc">Укажите указательным пальцем, чтобы двигать курсор; сведите большой и указательный, чтобы нажать. Зоны назначают действия областям экрана каждого приложения.</string>
     <string name="main_zones_open">Зоны экрана</string>
-    <string name="main_cursor_settings_open">Настройки курсора и калибровка</string>
     <string name="cursor_settings_title">Курсор</string>
     <string name="cursor_enabled">Курсор</string>
     <string name="cursor_enabled_desc">Указательный палец двигает курсор в выбранных приложениях</string>
@@ -129,6 +128,8 @@
     <string name="debug_last_gesture">Последний жест: %1$s</string>
     <string name="debug_none">—</string>
     <string name="debug_execute_actions">Выполнять действия</string>
+    <string name="debug_pointer">Поза: %1$s · щипок: %2$s · курсор: %3$s</string>
+    <string name="debug_last_pointer_event">Последнее событие курсора: %1$s</string>
     <string name="debug_record_start">Записать точки</string>
     <string name="debug_record_stop">Остановить запись · кадров: %1$d</string>
     <string name="debug_record_saved">Сохранено: %1$s</string>
