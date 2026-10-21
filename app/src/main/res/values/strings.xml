@@ -26,6 +26,8 @@
     <string name="gesture_swipe_right_desc">Swipe right → next track</string>
     <string name="gesture_swipe_left_desc">Swipe left → previous track</string>
     <string name="gesture_palm_desc">Open palm, hold 0.5 s → play / pause</string>
+    <string name="gesture_fist_open_desc">Fist opens into a palm → play / pause</string>
+    <string name="gesture_finger_desc">Index finger flick left / right → swipe left / right on the screen (switches tracks in the player). In apps with zones the finger drives the cursor instead.</string>
     <string name="power_save_title">Power saving</string>
     <string name="power_save_desc">Analyze 10 frames per second while no hand is visible</string>
     <string name="main_debug_open">Debug screen</string>
@@ -144,4 +146,7 @@
     <string name="gesture_swipe_left">Swipe left</string>
     <string name="gesture_swipe_right">Swipe right</string>
     <string name="gesture_open_palm">Open palm</string>
+    <string name="gesture_finger_left">Finger left</string>
+    <string name="gesture_finger_right">Finger right</string>
+    <string name="gesture_fist_open">Fist opens</string>
 </resources>

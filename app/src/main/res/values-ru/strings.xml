@@ -25,6 +25,8 @@
     <string name="gesture_swipe_right_desc">Свайп вправо → следующий трек</string>
     <string name="gesture_swipe_left_desc">Свайп влево → предыдущий трек</string>
     <string name="gesture_palm_desc">Ладонь, удержание 0,5 с → пауза / воспроизведение</string>
+    <string name="gesture_fist_open_desc">Разжатие кулака → пауза / воспроизведение</string>
+    <string name="gesture_finger_desc">Указательный палец влево / вправо → свайп влево / вправо по экрану (переключает треки в плеере). В приложениях с зонами палец двигает курсор.</string>
     <string name="power_save_title">Энергосбережение</string>
     <string name="power_save_desc">Анализировать 10 кадров в секунду, пока руки нет в кадре</string>
     <string name="main_debug_open">Экран отладки</string>
@@ -143,4 +145,7 @@
     <string name="gesture_swipe_left">Свайп влево</string>
     <string name="gesture_swipe_right">Свайп вправо</string>
     <string name="gesture_open_palm">Ладонь</string>
+    <string name="gesture_finger_left">Палец влево</string>
+    <string name="gesture_finger_right">Палец вправо</string>
+    <string name="gesture_fist_open">Разжатие кулака</string>
 </resources>

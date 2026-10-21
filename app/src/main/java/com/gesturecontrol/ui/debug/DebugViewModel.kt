@@ -5,7 +5,9 @@ import androidx.camera.core.Preview
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gesturecontrol.accessibility.PointerBridge
 import com.gesturecontrol.actions.ActionDispatcher
+import com.gesturecontrol.gestures.mapping.CommandPlanner
 import com.gesturecontrol.camera.CameraController
 import com.gesturecontrol.gestures.EngineState
 import com.gesturecontrol.gestures.Gesture
@@ -55,6 +57,7 @@ class DebugViewModel @Inject constructor(
     private val actionDispatcher: ActionDispatcher,
     private val settings: SettingsRepository,
     private val serviceState: GestureServiceState,
+    private val bridge: PointerBridge,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DebugUiState())
@@ -91,7 +94,13 @@ class DebugViewModel @Inject constructor(
     /** Called on the analysis thread. */
     private fun onResult(result: AnalysisResult) {
         val event = result.event
-        if (event != null && _state.value.executeActions) actionDispatcher.dispatch(event.gesture)
+        if (event != null && _state.value.executeActions) {
+            when (event.gesture) {
+                Gesture.FINGER_LEFT, Gesture.FINGER_RIGHT ->
+                    bridge.send(CommandPlanner.forTrackSwipe(toLeft = event.gesture == Gesture.FINGER_LEFT))
+                else -> actionDispatcher.dispatch(event.gesture)
+            }
+        }
         recorder?.let { rec ->
             rec.write(result.frame)
             _state.update { it.copy(recordingFrames = rec.frameCount) }

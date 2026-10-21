@@ -60,6 +60,10 @@ class PointerEngine(
     @Volatile
     var zones: ZoneSet = ZoneSet.EMPTY
 
+    /** When false the engine is idle (e.g. apps without zones, where pointing flicks switch tracks). */
+    @Volatile
+    var active: Boolean = true
+
     private val classifier = StaticGestureClassifier(PalmConfig())
     private val smoother = CursorSmoother(config.filter, config.deadZone, screenAspect)
     private val scroll = ScrollDetector(config.scroll)
@@ -81,6 +85,10 @@ class PointerEngine(
     private var dwellFired = false
 
     fun process(frame: HandFrame): PointerOutput {
+        if (!active) {
+            if (cursorActive || lastHandTs != null) reset()
+            return PointerOutput.HIDDEN
+        }
         val t = frame.timestampMs
         val lm = frame.landmarks
         val lastSeen = lastHandTs

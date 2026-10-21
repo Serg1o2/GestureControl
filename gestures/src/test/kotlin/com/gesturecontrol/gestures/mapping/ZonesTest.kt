@@ -62,6 +62,15 @@ class ZonesTest {
     }
 
     @Test
+    fun trackSwipesGoInTheFingerDirection() {
+        val left = CommandPlanner.forTrackSwipe(toLeft = true)
+        val right = CommandPlanner.forTrackSwipe(toLeft = false)
+        assertTrue(left.to.x < left.from.x)
+        assertTrue(right.to.x > right.from.x)
+        assertEquals(left.from.y, left.to.y, 1e-6f)
+    }
+
+    @Test
     fun pressAtCursorIsClampedToScreen() {
         assertEquals(TouchCommand.Tap(NormPoint(1f, 0f)), CommandPlanner.forPress(NormPoint(1.2f, -0.1f), null))
     }

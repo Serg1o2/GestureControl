@@ -28,6 +28,7 @@ import com.gesturecontrol.data.InstalledAppsRepository
 import com.gesturecontrol.data.SelectedAppsRepository
 import com.gesturecontrol.data.SettingsRepository
 import com.gesturecontrol.data.ZoneRepository
+import com.gesturecontrol.gestures.Gesture
 import com.gesturecontrol.gestures.GestureConfig
 import com.gesturecontrol.gestures.GestureEngine
 import com.gesturecontrol.gestures.PowerSaveConfig
@@ -87,6 +88,10 @@ class GestureService : LifecycleService() {
     @Volatile private var pointerEngine: PointerEngine? = null
     @Volatile private var currentZones: ZoneSet = ZoneSet.EMPTY
     @Volatile private var currentMapper: ScreenMapper = ScreenMapper.fromRegion()
+    @Volatile private var gestureEngine: GestureEngine? = null
+
+    /** The app on screen uses the cursor (cursor enabled and the app has zones). */
+    @Volatile private var cursorApp = false
 
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayChanged(displayId: Int) {
@@ -173,15 +178,27 @@ class GestureService : LifecycleService() {
                 if (pkg == null) flowOf(emptyList()) else zones.zonesFor(pkg)
             },
             settings.pointerSettings,
-        ) { zoneList, pointer -> ZoneSet(zoneList) to pointer.mapper }
-            .collect { (zoneSet, mapper) ->
+        ) { zoneList, pointer -> Triple(ZoneSet(zoneList), pointer.mapper, pointer.enabled) }
+            .collect { (zoneSet, mapper, cursorEnabled) ->
                 currentZones = zoneSet
                 currentMapper = mapper
-                pointerEngine?.let {
-                    it.zones = zoneSet
-                    it.mapper = mapper
-                }
+                cursorApp = cursorEnabled && zoneSet.zones.isNotEmpty()
+                applyModeFlags()
             }
+    }
+
+    /**
+     * Apps with zones use the pointing finger for the cursor; apps without zones use it for
+     * finger flicks (track switching), so the two never compete for the same pose.
+     */
+    private fun applyModeFlags() {
+        pointerEngine?.let {
+            it.zones = currentZones
+            it.mapper = currentMapper
+            it.active = cursorApp
+        }
+        gestureEngine?.fingerSwipesEnabled = !cursorApp
+        if (!cursorApp) bridge.overlay.value = OverlayState()
     }
 
     private suspend fun apply(status: ServiceStatus, key: BindKey) {
@@ -209,9 +226,12 @@ class GestureService : LifecycleService() {
             null
         }
         pointerEngine = pointer
+        val gestures = GestureEngine(GestureConfig())
+        gestureEngine = gestures
+        applyModeFlags()
         val analyzer = HandAnalyzer(
             landmarker = engine,
-            gestureEngine = GestureEngine(GestureConfig()),
+            gestureEngine = gestures,
             throttler = PowerSaveThrottler(PowerSaveConfig(enabled = key.powerSave)),
             pointerEngine = pointer,
             onResult = ::onAnalysisResult,
@@ -227,10 +247,18 @@ class GestureService : LifecycleService() {
 
     /** Called on the analysis thread. */
     private fun onAnalysisResult(result: AnalysisResult) {
-        result.event?.let { actionDispatcher.dispatch(it.gesture) }
+        result.event?.let { event ->
+            when (event.gesture) {
+                Gesture.FINGER_LEFT, Gesture.FINGER_RIGHT -> {
+                    val swipe = CommandPlanner.forTrackSwipe(toLeft = event.gesture == Gesture.FINGER_LEFT)
+                    if (!bridge.send(swipe)) mainHandler.post { warnAccessibilityOff() }
+                }
+                else -> actionDispatcher.dispatch(event.gesture)
+            }
+        }
         val pointer = result.pointer ?: return
-        // A frame still in flight after unbind must not bring the cursor back.
-        if (pointerEngine == null) return
+        // A frame still in flight after unbind (or in an app without zones) must not show the cursor.
+        if (pointerEngine == null || !cursorApp) return
         bridge.overlay.value = OverlayState(
             cursor = pointer.cursor,
             pinchClosed = pointer.pinchClosed,
@@ -262,6 +290,7 @@ class GestureService : LifecycleService() {
         camera.unbind()
         boundWith = null
         pointerEngine = null
+        gestureEngine = null
         bridge.overlay.value = OverlayState()
     }
 

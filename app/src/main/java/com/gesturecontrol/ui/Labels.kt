@@ -20,4 +20,7 @@ fun Gesture.label(): String = when (this) {
     Gesture.SWIPE_LEFT -> stringResource(R.string.gesture_swipe_left)
     Gesture.SWIPE_RIGHT -> stringResource(R.string.gesture_swipe_right)
     Gesture.OPEN_PALM_HOLD -> stringResource(R.string.gesture_open_palm)
+    Gesture.FINGER_LEFT -> stringResource(R.string.gesture_finger_left)
+    Gesture.FINGER_RIGHT -> stringResource(R.string.gesture_finger_right)
+    Gesture.FIST_OPEN -> stringResource(R.string.gesture_fist_open)
 }

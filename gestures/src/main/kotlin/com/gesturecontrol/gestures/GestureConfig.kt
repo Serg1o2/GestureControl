@@ -8,6 +8,14 @@ data class GestureConfig(
     val filter: FilterConfig = FilterConfig(),
     val swipe: SwipeConfig = SwipeConfig(),
     val palm: PalmConfig = PalmConfig(),
+    /** Quick horizontal flick of the pointing index finger. */
+    val fingerSwipe: SwipeConfig = SwipeConfig(
+        trackedPoint = TrackedPoint.INDEX_TIP,
+        minDistance = 0.15f,
+        minVelocity = 0.7f,
+        maxDurationMs = 500,
+    ),
+    val fistOpen: FistOpenConfig = FistOpenConfig(),
     /** Global debounce: no gesture can fire within this time after any gesture. */
     val cooldownMs: Long = 600,
     /** Hand absence shorter than this is treated as a detector dropout, not as the hand leaving. */
@@ -53,6 +61,14 @@ data class SwipeConfig(
      * so that bringing the hand back does not trigger the reverse action.
      */
     val oppositeSuppressMs: Long = 900,
+)
+
+/** Fist that opens into a palm. */
+data class FistOpenConfig(
+    /** The fist must be seen for at least this long first. */
+    val minFistMs: Long = 150,
+    /** Max time from the last fist frame to the first open-palm frame. */
+    val maxTransitionMs: Long = 400,
 )
 
 data class PalmConfig(

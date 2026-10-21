@@ -39,7 +39,7 @@ class StaticGestureClassifierTest {
         assertEquals(HandPose.OPEN_PALM, classify(Pose.OPEN_PALM))
         assertEquals(HandPose.POINTING, classify(Pose.POINTING))
         assertEquals(HandPose.TWO_FINGERS, classify(Pose.TWO_FINGERS))
-        assertEquals(HandPose.OTHER, classify(Pose.FIST))
+        assertEquals(HandPose.FIST, classify(Pose.FIST))
     }
 
     @Test

@@ -19,6 +19,8 @@ class ActionDispatcher @Inject constructor(@ApplicationContext context: Context)
         Gesture.SWIPE_RIGHT to MediaKeyAction(audioManager, KeyEvent.KEYCODE_MEDIA_NEXT),
         Gesture.SWIPE_LEFT to MediaKeyAction(audioManager, KeyEvent.KEYCODE_MEDIA_PREVIOUS),
         Gesture.OPEN_PALM_HOLD to MediaKeyAction(audioManager, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE),
+        Gesture.FIST_OPEN to MediaKeyAction(audioManager, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE),
+        // FINGER_LEFT / FINGER_RIGHT are touch swipes on the screen, performed by the gesture service.
     )
 
     fun dispatch(gesture: Gesture) {

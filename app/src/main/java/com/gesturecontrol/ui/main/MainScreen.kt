@@ -150,6 +150,8 @@ fun MainScreen(
             Text(stringResource(R.string.gesture_swipe_right_desc))
             Text(stringResource(R.string.gesture_swipe_left_desc))
             Text(stringResource(R.string.gesture_palm_desc))
+            Text(stringResource(R.string.gesture_fist_open_desc))
+            Text(stringResource(R.string.gesture_finger_desc))
 
             SectionTitle(stringResource(R.string.main_cursor_section))
             Text(stringResource(R.string.main_cursor_desc), style = MaterialTheme.typography.bodyMedium)

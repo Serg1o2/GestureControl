@@ -11,6 +11,9 @@ enum class HandPose {
 
     /** Index and middle extended, ring and pinky folded (thumb free). Scrolls. */
     TWO_FINGERS,
+
+    /** All four fingers folded (thumb free). */
+    FIST,
     OTHER,
 }
 
@@ -26,6 +29,7 @@ class StaticGestureClassifier(private val config: PalmConfig) {
             index && middle && ring && pinky && (!config.requireThumb || isThumbExtended(lm)) -> HandPose.OPEN_PALM
             index && !middle && !ring && !pinky -> HandPose.POINTING
             index && middle && !ring && !pinky -> HandPose.TWO_FINGERS
+            !index && !middle && !ring && !pinky -> HandPose.FIST
             else -> HandPose.OTHER
         }
     }

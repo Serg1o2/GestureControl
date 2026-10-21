@@ -66,6 +66,22 @@ object CommandPlanner {
         }
     }
 
+    /** Height of the horizontal track-switch swipe: the artwork area of typical music players. */
+    const val TRACK_SWIPE_Y = 0.4f
+
+    /**
+     * Finger flick to the user's left / right: a touch swipe in the same direction across the
+     * player artwork (in Spotify-like players a swipe left goes to the next track).
+     */
+    fun forTrackSwipe(toLeft: Boolean): TouchCommand.Swipe {
+        val a = NormPoint(0.8f, TRACK_SWIPE_Y)
+        val b = NormPoint(0.2f, TRACK_SWIPE_Y)
+        return if (toLeft) TouchCommand.Swipe(a, b, TRACK_SWIPE_MS) else TouchCommand.Swipe(b, a, TRACK_SWIPE_MS)
+    }
+
+    /** Fast enough to register as a page swipe rather than a drag. */
+    private const val TRACK_SWIPE_MS = 180L
+
     /** Two-finger scroll: a vertical swipe through the middle of the screen. */
     fun forScroll(direction: VerticalDirection): TouchCommand.Swipe = swipeIn(NormRect(0f, 0f, 1f, 1f), direction)
 

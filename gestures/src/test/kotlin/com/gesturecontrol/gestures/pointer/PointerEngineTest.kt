@@ -82,6 +82,16 @@ class PointerEngineTest {
     }
 
     @Test
+    fun inactiveEngineShowsNothingAndPressesNothing() {
+        val e = engine().apply { active = false }
+        val out = run(
+            e,
+            SyntheticHand.Sequence().hold(Pose.POINTING, 0.5f, 0.7f, 500).hold(Pose.PINCH, 0.5f, 0.7f, 200).build(),
+        )
+        assertTrue(out.all { it.cursor == null && it.event == null })
+    }
+
+    @Test
     fun cursorHiddenWithoutPointingPose() {
         val fist = run(engine(), SyntheticHand.Sequence().hold(Pose.FIST, 0.5f, 0.7f, 500).build())
         assertTrue(fist.all { it.cursor == null })

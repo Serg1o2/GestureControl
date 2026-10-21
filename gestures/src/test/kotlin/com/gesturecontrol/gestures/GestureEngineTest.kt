@@ -47,14 +47,14 @@ class GestureEngineTest {
     }
 
     @Test
-    fun fastPointingOrTwoFingerMotionIsNotASwipe() {
+    fun fastPointingOrTwoFingerMotionIsNotAPalmSwipe() {
         val pointing = SyntheticHand.Sequence()
             .move(Pose.POINTING, 0.2f, 0.7f, 0.7f, 0.7f, 300)
             .build()
         val twoFingers = SyntheticHand.Sequence()
             .move(Pose.TWO_FINGERS, 0.7f, 0.7f, 0.2f, 0.7f, 300)
             .build()
-        assertEquals(emptyList<Gesture>(), gestures(pointing))
+        assertEquals(listOf(Gesture.FINGER_RIGHT), gestures(pointing))
         assertEquals(emptyList<Gesture>(), gestures(twoFingers))
     }
 
@@ -160,10 +160,84 @@ class GestureEngineTest {
     fun palmFiresAgainAfterRelease() {
         val frames = SyntheticHand.Sequence()
             .hold(Pose.OPEN_PALM, 0.5f, 0.7f, 700)
-            .hold(Pose.FIST, 0.5f, 0.7f, 400)
+            .hold(Pose.TWO_FINGERS, 0.5f, 0.7f, 400)
             .hold(Pose.OPEN_PALM, 0.5f, 0.7f, 700)
             .build()
         assertEquals(listOf(Gesture.OPEN_PALM_HOLD, Gesture.OPEN_PALM_HOLD), gestures(frames))
+    }
+
+    // --- Fist open ---
+
+    @Test
+    fun fistOpeningIntoPalmFiresOnceWithoutPalmHold() {
+        val frames = SyntheticHand.Sequence()
+            .hold(Pose.FIST, 0.5f, 0.7f, 400)
+            .hold(Pose.OPEN_PALM, 0.5f, 0.7f, 1500)
+            .build()
+        val events = engine().run(frames)
+        assertEquals(listOf(Gesture.FIST_OPEN), events.map { it.gesture })
+        // ~3 frames of One Euro lag after the palm appears at 400 ms.
+        assertTrue("fires right after opening: ${events[0].timestampMs}", events[0].timestampMs in 400..520)
+    }
+
+    @Test
+    fun briefFistDoesNotCountAsFistOpen() {
+        // A fist preceded by another pose, as in real use (smoothing delays both its start and end).
+        val frames = SyntheticHand.Sequence()
+            .hold(Pose.TWO_FINGERS, 0.5f, 0.7f, 300)
+            .hold(Pose.FIST, 0.5f, 0.7f, 100)
+            .hold(Pose.OPEN_PALM, 0.5f, 0.7f, 300)
+            .build()
+        assertEquals(emptyList<Gesture>(), gestures(frames))
+    }
+
+    @Test
+    fun slowOpeningThroughOtherPosesIsNotFistOpen() {
+        val frames = SyntheticHand.Sequence()
+            .hold(Pose.FIST, 0.5f, 0.7f, 400)
+            .hold(Pose.POINTING, 0.5f, 0.7f, 600)
+            .hold(Pose.OPEN_PALM, 0.5f, 0.7f, 300)
+            .build()
+        assertEquals(emptyList<Gesture>(), gestures(frames))
+    }
+
+    @Test
+    fun fistOpenCanRepeatAfterClosingAgain() {
+        val frames = SyntheticHand.Sequence()
+            .hold(Pose.FIST, 0.5f, 0.7f, 300)
+            .hold(Pose.OPEN_PALM, 0.5f, 0.7f, 700)
+            .hold(Pose.FIST, 0.5f, 0.7f, 300)
+            .hold(Pose.OPEN_PALM, 0.5f, 0.7f, 300)
+            .build()
+        assertEquals(listOf(Gesture.FIST_OPEN, Gesture.FIST_OPEN), gestures(frames))
+    }
+
+    // --- Finger swipes ---
+
+    @Test
+    fun pointingFingerFlicksAreFingerSwipes() {
+        val right = SyntheticHand.Sequence().move(Pose.POINTING, 0.3f, 0.7f, 0.6f, 0.7f, 250).build()
+        val left = SyntheticHand.Sequence().move(Pose.POINTING, 0.6f, 0.7f, 0.3f, 0.7f, 250).build()
+        assertEquals(listOf(Gesture.FINGER_RIGHT), gestures(right))
+        assertEquals(listOf(Gesture.FINGER_LEFT), gestures(left))
+    }
+
+    @Test
+    fun fingerSwipeReturnIsSuppressedAndSlowPointingIsIgnored() {
+        val back = SyntheticHand.Sequence()
+            .move(Pose.POINTING, 0.3f, 0.7f, 0.6f, 0.7f, 250)
+            .move(Pose.POINTING, 0.6f, 0.7f, 0.3f, 0.7f, 300)
+            .build()
+        assertEquals(listOf(Gesture.FINGER_RIGHT), gestures(back))
+        val slow = SyntheticHand.Sequence().move(Pose.POINTING, 0.3f, 0.7f, 0.6f, 0.7f, 1500).build()
+        assertEquals(emptyList<Gesture>(), gestures(slow))
+    }
+
+    @Test
+    fun fingerSwipesCanBeDisabledForCursorApps() {
+        val e = engine().apply { fingerSwipesEnabled = false }
+        val frames = SyntheticHand.Sequence().move(Pose.POINTING, 0.3f, 0.7f, 0.6f, 0.7f, 250).build()
+        assertEquals(emptyList<GestureEvent>(), e.run(frames))
     }
 
     @Test
@@ -216,10 +290,20 @@ class GestureEngineTest {
     fun swipeThenPalm() {
         val frames = SyntheticHand.Sequence()
             .move(Pose.FIST, 0.2f, 0.7f, 0.7f, 0.7f, 300)
-            .hold(Pose.FIST, 0.7f, 0.7f, 700)
+            .noHand(700)
             .hold(Pose.OPEN_PALM, 0.7f, 0.7f, 700)
             .build()
         assertEquals(listOf(Gesture.SWIPE_RIGHT, Gesture.OPEN_PALM_HOLD), gestures(frames))
+    }
+
+    @Test
+    fun fistSwipeThenOpeningTheFistIsFistOpen() {
+        val frames = SyntheticHand.Sequence()
+            .move(Pose.FIST, 0.2f, 0.7f, 0.7f, 0.7f, 300)
+            .hold(Pose.FIST, 0.7f, 0.7f, 700)
+            .hold(Pose.OPEN_PALM, 0.7f, 0.7f, 700)
+            .build()
+        assertEquals(listOf(Gesture.SWIPE_RIGHT, Gesture.FIST_OPEN), gestures(frames))
     }
 
     @Test
