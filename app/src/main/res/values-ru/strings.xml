@@ -46,6 +46,20 @@
     <!-- Accessibility service -->
     <string name="accessibility_service_description">GestureControl использует эту службу, чтобы узнать, какое приложение на экране (жесты работают только в выбранных), показать курсор руки и выполнять нажатия, прокрутку и действия «Назад» / «Домой», которые вы вызываете рукой. Служба не читает содержимое экрана и вводимый текст и ничего не сохраняет.</string>
 
+    <!-- Accessibility disclosure -->
+    <string name="disclosure_title">Зачем GestureControl служба специальных возможностей</string>
+    <string name="disclosure_intro">Чтобы управлять другими приложениями рукой, GestureControl использует службу специальных возможностей Android. Прочитайте, что она делает, прежде чем включать её.</string>
+    <string name="disclosure_does_title">Что делает служба</string>
+    <string name="disclosure_does_app">Узнаёт, какое приложение на экране, чтобы камера и жесты работали только в выбранных вами приложениях.</string>
+    <string name="disclosure_does_cursor">Показывает курсор руки поверх экрана.</string>
+    <string name="disclosure_does_gestures">Выполняет нажатия, прокрутку и действия «Назад», «Домой», «Недавние», когда вы делаете жест.</string>
+    <string name="disclosure_does_secure">На Android 14+ спрашивает у системы, защищено ли текущее окно от снимков экрана. Используется только ответ «да/нет»: изображение не читается и не сохраняется.</string>
+    <string name="disclosure_doesnt_title">Чего служба не делает</string>
+    <string name="disclosure_doesnt_read">Не читает текст, содержимое окон и то, что вы вводите.</string>
+    <string name="disclosure_doesnt_store">Не сохраняет и не передаёт данные: у приложения нет доступа в интернет.</string>
+    <string name="disclosure_continue">Открыть настройки спецвозможностей</string>
+    <string name="disclosure_cancel">Не сейчас</string>
+
     <!-- Hints next to the cursor -->
     <string name="hint_gesture_cancelled">Нажатие не прошло</string>
     <string name="hint_gesture_rejected">Система не приняла жест</string>

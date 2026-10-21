@@ -47,6 +47,20 @@
     <!-- Accessibility service -->
     <string name="accessibility_service_description">GestureControl uses this service to find out which app is on screen (gestures work only in the apps you selected), to show the hand cursor and to perform taps, swipes and Back / Home actions that you trigger with your hand. It does not read screen content or what you type, and stores nothing.</string>
 
+    <!-- Accessibility disclosure -->
+    <string name="disclosure_title">Why GestureControl needs the accessibility service</string>
+    <string name="disclosure_intro">To control other apps with your hand, GestureControl uses an Android accessibility service. Please read what it does before turning it on.</string>
+    <string name="disclosure_does_title">What the service does</string>
+    <string name="disclosure_does_app">Finds out which app is on screen, so the camera and gestures work only in the apps you selected.</string>
+    <string name="disclosure_does_cursor">Shows the hand cursor on top of the screen.</string>
+    <string name="disclosure_does_gestures">Performs taps, scrolling and Back / Home / Recents when you make a gesture.</string>
+    <string name="disclosure_does_secure">On Android 14+ asks the system whether the current window is protected from screenshots. Only the yes/no answer is used: the image is never read or saved.</string>
+    <string name="disclosure_doesnt_title">What the service does not do</string>
+    <string name="disclosure_doesnt_read">It does not read text, window content or what you type.</string>
+    <string name="disclosure_doesnt_store">It does not save or send any data: the app has no internet access.</string>
+    <string name="disclosure_continue">Open accessibility settings</string>
+    <string name="disclosure_cancel">Not now</string>
+
     <!-- Hints next to the cursor -->
     <string name="hint_gesture_cancelled">The tap did not go through</string>
     <string name="hint_gesture_rejected">The system rejected the gesture</string>

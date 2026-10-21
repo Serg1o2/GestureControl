@@ -1,9 +1,7 @@
 package com.gesturecontrol.ui.main
 
 import android.Manifest
-import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -49,6 +47,7 @@ import kotlinx.coroutines.launch
 fun MainScreen(
     onOpenApps: () -> Unit,
     onOpenDebug: () -> Unit,
+    onOpenAccessibilityDisclosure: () -> Unit,
     viewModel: MainViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -132,11 +131,7 @@ fun MainScreen(
                 done = accessibilityEnabled,
                 doneLabel = stringResource(R.string.status_enabled),
                 actionLabel = stringResource(R.string.action_open_settings),
-                onAction = {
-                    context.startActivity(
-                        Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
-                    )
-                },
+                onAction = onOpenAccessibilityDisclosure,
             )
 
             SectionTitle(stringResource(R.string.main_apps_section))
