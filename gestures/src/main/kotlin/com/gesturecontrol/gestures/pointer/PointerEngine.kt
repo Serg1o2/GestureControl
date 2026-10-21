@@ -12,6 +12,8 @@ import com.gesturecontrol.gestures.mapping.ScreenMapper
 import com.gesturecontrol.gestures.mapping.VerticalDirection
 import com.gesturecontrol.gestures.mapping.Zone
 import com.gesturecontrol.gestures.mapping.ZoneSet
+import com.gesturecontrol.gestures.ml.PoseClassifier
+import com.gesturecontrol.gestures.ml.RuleBasedPoseClassifier
 
 sealed interface PointerEvent {
     /** A press at [at] (normalized screen); [zone] is the zone under it, if any. */
@@ -51,6 +53,8 @@ class PointerEngine(
     private val config: PointerConfig = PointerConfig(),
     /** Screen height / width, so that distances are measured as on screen. */
     screenAspect: Float = 2f,
+    /** Pose source (rules or the ML model); pinch geometry always uses the rules. */
+    private val poseClassifier: PoseClassifier = RuleBasedPoseClassifier(),
 ) {
     /** Can be replaced at any time (calibration changes). */
     @Volatile
@@ -99,7 +103,7 @@ class PointerEngine(
         if (lastSeen != null && t - lastSeen > config.handLostToleranceMs) reset()
         lastHandTs = t
 
-        val pose = classifier.classify(lm)
+        val pose = poseClassifier.classify(lm, frame.aspect).pose
         val ratio = StaticGestureClassifier.pinchRatio(lm)
 
         if (pose == HandPose.TWO_FINGERS) {
@@ -144,6 +148,7 @@ class PointerEngine(
         hideCursor()
         lastHandTs = null
         scroll.resetStroke()
+        poseClassifier.reset()
     }
 
     private fun updatePinch(t: Long, candidate: Boolean, ratio: Float): PointerEvent? {

@@ -14,6 +14,10 @@ enum class HandPose {
 
     /** All four fingers folded (thumb free). */
     FIST,
+
+    /** Produced only by the ML pose model. */
+    THUMB_UP,
+    THUMB_DOWN,
     OTHER,
 }
 

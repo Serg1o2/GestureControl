@@ -1,5 +1,8 @@
 package com.gesturecontrol.gestures
 
+import com.gesturecontrol.gestures.ml.PoseClassifier
+import com.gesturecontrol.gestures.ml.RuleBasedPoseClassifier
+
 enum class Gesture {
     SWIPE_LEFT,
     SWIPE_RIGHT,
@@ -41,9 +44,12 @@ sealed interface EngineState {
  * - Cooldown: after any event nothing fires for [GestureConfig.cooldownMs];
  *   the opposite swipe is suppressed for [SwipeConfig.oppositeSuppressMs].
  */
-class GestureEngine(private val config: GestureConfig = GestureConfig()) {
+class GestureEngine(
+    private val config: GestureConfig = GestureConfig(),
+    /** Rules by default; the ML pose model can be plugged in here. */
+    private val poseClassifier: PoseClassifier = RuleBasedPoseClassifier(config.palm),
+) {
     private val smoother = LandmarkSmoother(config.filter)
-    private val classifier = StaticGestureClassifier(config.palm)
     private val swipeDetector = SwipeDetector(config.swipe)
     private val fingerDetector = SwipeDetector(config.fingerSwipe)
     private val palmTrajectory = Trajectory(config.palm.velocityWindowMs)
@@ -96,7 +102,7 @@ class GestureEngine(private val config: GestureConfig = GestureConfig()) {
         val (sx, sy) = lm.centroid(config.swipe.trackedPoint.indices)
         val (px, py) = lm.centroid(TrackedPoint.PALM_CENTER.indices)
         palmTrajectory.add(t, px, py)
-        val pose = classifier.classify(lm)
+        val pose = poseClassifier.classify(lm, frame.aspect).pose
         val isPalm = pose == HandPose.OPEN_PALM
         // Cursor and scroll poses belong to the pointer layer: a fast pointer move is not a track swipe.
         val pointerPose = pose == HandPose.POINTING || pose == HandPose.TWO_FINGERS
@@ -246,6 +252,7 @@ class GestureEngine(private val config: GestureConfig = GestureConfig()) {
         fingerDetector.reset()
         palmTrajectory.clear()
         fistStartTs = null
+        poseClassifier.reset()
         resetPalmHold()
         palmLatched = false
         palmLatchReleaseTs = null
