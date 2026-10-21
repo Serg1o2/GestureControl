@@ -25,14 +25,17 @@ After each change: `assembleDebug` and `:gestures:test` must pass before committ
   - root package: `GestureEngine` (media gestures state machine), `SwipeDetector`, `StaticGestureClassifier` (poses + pinch ratio), `OneEuroFilter`, `PowerSaveThrottler`, `LandmarkCsv`, `GestureConfig`;
   - `mapping/`: `ScreenMapper` + `Calibration` (3-point affine frame→screen), `CalibrationCapture`, `Zone`/`ZoneAction`/`ZoneSet` (hit test), `CommandPlanner` (press/scroll → `TouchCommand`), `NormPoint`/`NormRect`;
   - `pointer/`: `PointerEngine` (cursor, pinch/dwell press, two-finger scroll), `CursorSmoother` (One Euro + dead zone), `ScrollDetector`, `PointerConfig`.
+  - `ml/`: `LandmarkNormalizer` (norm-v1, **twin of `ml/gc_ml/normalize.py`**, parity-tested), `PoseClassifier` (rules or model), `VotingPoseClassifier` (per-class thresholds + 5-frame vote);
+  - `custom/`: custom gestures — `SampleBuilder` (shape + palm motion, 16 steps), `Dtw`, `CustomGestureRecognizer` (online, 3 time scales, threshold from repeat spread, cooldown, re-arm), `GestureQuality`, `RecordingTrimmer`, `SampleCodec`, `ActionSpec`.
 - `:app` packages:
   - `camera/` CameraX binding (front camera, ImageAnalysis RGBA, optional Preview). The camera provider is shared: unbind only own use cases, never `unbindAll()`.
-  - `vision/` MediaPipe wrapper (VIDEO mode, CPU) and `HandAnalyzer` (rotate + mirror to user-view coordinates → landmarks → `GestureEngine` + optional `PointerEngine`). Everything runs on the single analysis thread.
-  - `actions/` media keys via `AudioManager.dispatchMediaKeyEvent`, fixed gesture→action map in `ActionDispatcher`.
+  - `vision/` MediaPipe wrapper (VIDEO mode, CPU) and `HandAnalyzer` (rotate + mirror to user-view coordinates → `HandFrame` with the real frame aspect → `GestureEngine` + optional `PointerEngine`). `TfLitePoseModel` (LiteRT, `assets/models/pose_mlp.{tflite,json}`, refuses a model whose `norm` differs) and `PoseClassifierFactory` (rules / model with fallback). `LandmarkRecorder` = engine recordings and the labeled training logger. Everything runs on the single analysis thread.
+  - `actions/` media keys via `AudioManager.dispatchMediaKeyEvent`, fixed built-in gesture→action map in `ActionDispatcher`; `ActionExecutor` runs the custom-gesture action library.
   - `service/` `GestureService` camera foreground service + shared `GestureServiceState`. Routes pointer output to `PointerBridge`; zones and calibration are updated live, other pointer settings rebind the camera.
   - `accessibility/` `ForegroundAppService`: foreground app (activities only) → `ForegroundAppTracker`; `CursorOverlay` (TYPE_ACCESSIBILITY_OVERLAY, non-touchable, attached only when needed); `GestureExecutor` (`dispatchGesture` with cancel/reject → hints, global actions); `SecureWindowProbe` (FLAG_SECURE via `takeScreenshotOfWindow`, API 34+, buffer closed unread); `PointerBridge` (in-process link to the service).
-  - `data/` Room v2 (`selected_apps`, `zones`, auto-migration 1→2, schemas in `app/schemas`), DataStore settings incl. `PointerSettings` and calibration, installed app list.
-  - `ui/` Compose: main, app selection, debug (preview + overlay + pointer info + CSV recorder), accessibility disclosure, zone list/editor, cursor settings, calibration wizard.
+  - `data/` Room v3 (`selected_apps`, `zones`, `custom_gestures`; auto-migrations 1→2→3, schemas in `app/schemas`), DataStore settings incl. `PointerSettings`, calibration and classifier choice, installed app list.
+  - `ui/` Compose: main, app selection, debug (preview + overlay + pointer info + recorder / training logger), accessibility disclosure, zone list/editor, cursor settings, calibration wizard, custom gestures list/editor.
+- `ml/` Python pipeline (not in the APK): see `ml/README.md`; one command `run_all.py`. Two venvs (MediaPipe 0.10.20 = app version; TensorFlow 2.19).
 - DI: Hilt. Async: coroutines/Flow.
 
 ## Key rules
@@ -44,6 +47,7 @@ After each change: `assembleDebug` and `:gestures:test` must pass before committ
 - Accessibility failures (cancelled/rejected gesture, secure window, locked screen) show a rate-limited hint next to the cursor; never crash.
 - Privacy: frames are never stored or sent. No network: `INTERNET`/`ACCESS_NETWORK_STATE` are removed in the manifest (MediaPipe adds them). The recorder writes landmark coordinates only. Keep `docs/privacy.md` and the disclosure screen in sync with any data or capability change.
 - Code comments in English. All UI strings in `res/values/strings.xml` (English, default) and `res/values-ru/strings.xml` (Russian).
+- Never change `normalize.py` without the Kotlin twin, a new norm version and new parity vectors (`python -m gc_ml.export_vectors --what norm`).
 - Gesture tests: add real recordings to `gestures/src/test/resources/sequences/` with a `# expect: GESTURE,...` line; `RecordedSequenceTest` replays all of them.
 - Small commits with clear messages; commit only after build and tests are green.
 
@@ -51,5 +55,6 @@ After each change: `assembleDebug` and `:gestures:test` must pass before committ
 
 - Stage 1 (done): swipe left/right, open palm hold, media actions, foreground service, app selection, accessibility-based gating, power saving.
 - Stage 2 (done): cursor overlay, pinch/dwell press, per-app screen zones with actions, two-finger scroll, 3-point calibration, secure-window handling, accessibility disclosure. One zone set and one calibration per app (portrait), by the owner's decision.
-- Stage 3 (not started): custom gestures and model training. Do not add unless asked.
+- Stage 3 (done): finger flicks and fist-open (rules), pose MLP trained on HaGRIDv2 (+ IPN dynamic model evaluated), TFLite integration with fallback, training logger, custom gestures (profiles, quality, test, JSON export/import, action library).
+- Model changes: retrain with `ml/run_all.py`, keep `norm` in sync with `LandmarkNormalizer.VERSION`, update `docs/accuracy.md`.
 - Personal, non-commercial app: Google Play policy constraints are not a blocker.
