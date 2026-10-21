@@ -8,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.navArgument
+import com.gesturecontrol.ui.cursor.CalibrationScreen
+import com.gesturecontrol.ui.cursor.CursorSettingsScreen
 import com.gesturecontrol.ui.zones.ZoneAppsScreen
 import com.gesturecontrol.ui.zones.ZoneEditorScreen
 import com.gesturecontrol.ui.zones.ZoneEditorViewModel
@@ -35,8 +37,16 @@ class MainActivity : ComponentActivity() {
                             onOpenDebug = { nav.navigate(Routes.DEBUG) },
                             onOpenAccessibilityDisclosure = { nav.navigate(Routes.ACCESSIBILITY_DISCLOSURE) },
                             onOpenZones = { nav.navigate(Routes.ZONES) },
+                            onOpenCursorSettings = { nav.navigate(Routes.CURSOR_SETTINGS) },
                         )
                     }
+                    composable(Routes.CURSOR_SETTINGS) {
+                        CursorSettingsScreen(
+                            onBack = { nav.popBackStack() },
+                            onCalibrate = { nav.navigate(Routes.CALIBRATION) },
+                        )
+                    }
+                    composable(Routes.CALIBRATION) { CalibrationScreen(onDone = { nav.popBackStack() }) }
                     composable(Routes.ZONES) {
                         ZoneAppsScreen(
                             onBack = { nav.popBackStack() },
@@ -67,4 +77,6 @@ object Routes {
     const val ACCESSIBILITY_DISCLOSURE = "accessibility_disclosure"
     const val ZONES = "zones"
     const val ZONE_EDITOR = "zone_editor"
+    const val CURSOR_SETTINGS = "cursor_settings"
+    const val CALIBRATION = "calibration"
 }

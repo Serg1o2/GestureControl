@@ -49,6 +49,7 @@ fun MainScreen(
     onOpenDebug: () -> Unit,
     onOpenAccessibilityDisclosure: () -> Unit,
     onOpenZones: () -> Unit,
+    onOpenCursorSettings: () -> Unit,
     viewModel: MainViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -152,7 +153,10 @@ fun MainScreen(
 
             SectionTitle(stringResource(R.string.main_cursor_section))
             Text(stringResource(R.string.main_cursor_desc), style = MaterialTheme.typography.bodyMedium)
-            OutlinedButton(onClick = onOpenZones) { Text(stringResource(R.string.main_zones_open)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onOpenZones) { Text(stringResource(R.string.main_zones_open)) }
+                OutlinedButton(onClick = onOpenCursorSettings) { Text(stringResource(R.string.cursor_settings_title)) }
+            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
