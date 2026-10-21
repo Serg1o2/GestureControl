@@ -72,6 +72,19 @@ class ScreenMapperTest {
     }
 
     @Test
+    fun rectOffsetStaysOnScreenAndKeepsSize() {
+        val r = NormRect(0.1f, 0.8f, 0.3f, 0.9f)
+        val moved = r.offsetWithin(-0.5f, 0.5f)
+        assertEquals(0f, moved.left, 1e-6f)
+        assertEquals(1f, moved.bottom, 1e-6f)
+        assertEquals(r.width, moved.width, 1e-6f)
+        assertEquals(r.height, moved.height, 1e-6f)
+        val inside = r.offsetWithin(0.2f, -0.3f)
+        assertEquals(NormPoint(0.3f, 0.5f).x, inside.left, 1e-6f)
+        assertEquals(0.5f, inside.top, 1e-6f)
+    }
+
+    @Test
     fun rectFromCornersNormalizesAndContains() {
         val r = NormRect.fromCorners(NormPoint(0.8f, 0.6f), NormPoint(0.2f, 1.3f))
         assertEquals(NormRect(0.2f, 0.6f, 0.8f, 1f), r)

@@ -47,6 +47,30 @@
     <!-- Accessibility service -->
     <string name="accessibility_service_description">GestureControl uses this service to find out which app is on screen (gestures work only in the apps you selected), to show the hand cursor and to perform taps, swipes and Back / Home actions that you trigger with your hand. It does not read screen content or what you type, and stores nothing.</string>
 
+    <!-- Cursor and zones -->
+    <string name="main_cursor_section">Cursor and zones</string>
+    <string name="main_cursor_desc">Point with your index finger to move the cursor; pinch thumb and index to tap. Zones assign actions to screen areas of each app.</string>
+    <string name="main_zones_open">Screen zones</string>
+    <string name="zones_title">Screen zones</string>
+    <string name="zones_list_hint">Zones work in cursor mode. Choose an app to edit its zones.</string>
+    <string name="zones_count">Zones: %1$d</string>
+    <string name="zones_no_selected_apps">Select apps on the main screen first</string>
+    <string name="zone_editor_hint">Drag on the screen mock to draw a zone. Tap a zone to select it; drag the selected zone to move it.</string>
+    <string name="zone_action">Action: %1$s</string>
+    <string name="zone_delete">Delete</string>
+    <string name="zone_none_selected">No zone selected</string>
+    <string name="action_tap">Tap</string>
+    <string name="action_long_press">Long press</string>
+    <string name="action_swipe_up">Swipe up (scroll)</string>
+    <string name="action_swipe_down">Swipe down (scroll)</string>
+    <string name="action_back">Back</string>
+    <string name="action_home">Home</string>
+    <string name="action_recents">Recent apps</string>
+    <string name="action_notifications">Notification shade</string>
+    <string name="action_media_next">Next track</string>
+    <string name="action_media_previous">Previous track</string>
+    <string name="action_media_play_pause">Play / pause</string>
+
     <!-- Accessibility disclosure -->
     <string name="disclosure_title">Why GestureControl needs the accessibility service</string>
     <string name="disclosure_intro">To control other apps with your hand, GestureControl uses an Android accessibility service. Please read what it does before turning it on.</string>

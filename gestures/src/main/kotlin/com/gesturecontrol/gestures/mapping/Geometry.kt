@@ -31,6 +31,13 @@ data class NormRect(val left: Float, val top: Float, val right: Float, val botto
     /** Point at fractions ([fx], [fy]) of the rectangle. */
     fun pointAt(fx: Float, fy: Float) = NormPoint(left + width * fx, top + height * fy)
 
+    /** Moves the rectangle by (dx, dy), keeping its size and keeping it inside the unit square. */
+    fun offsetWithin(dx: Float, dy: Float): NormRect {
+        val x = (left + dx).coerceIn(0f, 1f - width)
+        val y = (top + dy).coerceIn(0f, 1f - height)
+        return NormRect(x, y, x + width, y + height)
+    }
+
     companion object {
         /** Rectangle spanned by two corners in any order, clamped to the unit square. */
         fun fromCorners(a: NormPoint, b: NormPoint): NormRect {

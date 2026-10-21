@@ -46,6 +46,30 @@
     <!-- Accessibility service -->
     <string name="accessibility_service_description">GestureControl использует эту службу, чтобы узнать, какое приложение на экране (жесты работают только в выбранных), показать курсор руки и выполнять нажатия, прокрутку и действия «Назад» / «Домой», которые вы вызываете рукой. Служба не читает содержимое экрана и вводимый текст и ничего не сохраняет.</string>
 
+    <!-- Cursor and zones -->
+    <string name="main_cursor_section">Курсор и зоны</string>
+    <string name="main_cursor_desc">Укажите указательным пальцем, чтобы двигать курсор; сведите большой и указательный, чтобы нажать. Зоны назначают действия областям экрана каждого приложения.</string>
+    <string name="main_zones_open">Зоны экрана</string>
+    <string name="zones_title">Зоны экрана</string>
+    <string name="zones_list_hint">Зоны работают в режиме курсора. Выберите приложение, чтобы настроить его зоны.</string>
+    <string name="zones_count">Зон: %1$d</string>
+    <string name="zones_no_selected_apps">Сначала выберите приложения на главном экране</string>
+    <string name="zone_editor_hint">Проведите по макету экрана, чтобы нарисовать зону. Нажмите на зону, чтобы выбрать её; перетащите выбранную зону, чтобы сдвинуть.</string>
+    <string name="zone_action">Действие: %1$s</string>
+    <string name="zone_delete">Удалить</string>
+    <string name="zone_none_selected">Зона не выбрана</string>
+    <string name="action_tap">Нажатие</string>
+    <string name="action_long_press">Долгое нажатие</string>
+    <string name="action_swipe_up">Свайп вверх (прокрутка)</string>
+    <string name="action_swipe_down">Свайп вниз (прокрутка)</string>
+    <string name="action_back">Назад</string>
+    <string name="action_home">Домой</string>
+    <string name="action_recents">Недавние приложения</string>
+    <string name="action_notifications">Шторка уведомлений</string>
+    <string name="action_media_next">Следующий трек</string>
+    <string name="action_media_previous">Предыдущий трек</string>
+    <string name="action_media_play_pause">Пауза / воспроизведение</string>
+
     <!-- Accessibility disclosure -->
     <string name="disclosure_title">Зачем GestureControl служба специальных возможностей</string>
     <string name="disclosure_intro">Чтобы управлять другими приложениями рукой, GestureControl использует службу специальных возможностей Android. Прочитайте, что она делает, прежде чем включать её.</string>

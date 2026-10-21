@@ -47,6 +47,9 @@ interface ZoneDao {
     @Query("SELECT COALESCE(MAX(position), -1) FROM zones WHERE packageName = :packageName")
     suspend fun maxPosition(packageName: String): Int
 
+    @Query("SELECT position FROM zones WHERE id = :id")
+    suspend fun positionOf(id: Long): Int?
+
     @Insert
     suspend fun insert(zone: ZoneEntity): Long
 
@@ -103,7 +106,9 @@ class ZoneRepository @Inject constructor(private val dao: ZoneDao) {
         )
     }
 
-    suspend fun update(packageName: String, zone: Zone, position: Int) {
+    /** Updates rectangle and action; the z-order position is kept. */
+    suspend fun update(packageName: String, zone: Zone) {
+        val position = dao.positionOf(zone.id) ?: return
         val (type, param) = ActionCodec.encode(zone.action)
         dao.update(
             ZoneEntity(
