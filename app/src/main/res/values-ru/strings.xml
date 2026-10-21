@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_back">Назад</string>
+
+    <!-- Main screen -->
+    <string name="main_toggle_label">Управление жестами</string>
+    <string name="main_toggle_on">Работает в выбранных приложениях</string>
+    <string name="main_toggle_off">Выключено</string>
+    <string name="main_setup_section">Настройка</string>
+    <string name="perm_camera">Камера</string>
+    <string name="perm_camera_desc">Нужна, чтобы видеть руку. Видео не покидает устройство.</string>
+    <string name="perm_notifications">Уведомления</string>
+    <string name="perm_notifications_desc">Статус управления жестами и кнопка «Стоп»</string>
+    <string name="perm_accessibility">Служба специальных возможностей</string>
+    <string name="perm_accessibility_desc">Определяет, какое приложение на экране, чтобы жесты работали только там, где вы разрешили</string>
+    <string name="perm_accessibility_restricted_hint">Если переключатель неактивен: О приложении → ⋮ → Разрешить ограниченные настройки</string>
+    <string name="action_grant">Разрешить</string>
+    <string name="action_open_settings">Открыть настройки</string>
+    <string name="status_granted">Разрешено</string>
+    <string name="status_enabled">Включено</string>
+    <string name="main_apps_section">Приложения</string>
+    <string name="main_apps_selected">Выбрано: %1$d</string>
+    <string name="main_apps_choose">Выбрать приложения</string>
+    <string name="main_apps_none_hint">Выберите хотя бы одно приложение, в котором будут работать жесты</string>
+    <string name="main_gestures_section">Жесты</string>
+    <string name="gesture_swipe_right_desc">Свайп вправо → следующий трек</string>
+    <string name="gesture_swipe_left_desc">Свайп влево → предыдущий трек</string>
+    <string name="gesture_palm_desc">Ладонь, удержание 0,5 с → пауза / воспроизведение</string>
+    <string name="power_save_title">Энергосбережение</string>
+    <string name="power_save_desc">Анализировать 10 кадров в секунду, пока руки нет в кадре</string>
+    <string name="main_debug_open">Экран отладки</string>
+    <string name="main_privacy_note">Видео обрабатывается только на устройстве. Оно не сохраняется и никуда не передаётся.</string>
+    <string name="main_requirements_missing">Сначала разрешите доступ к камере и включите службу специальных возможностей</string>
+
+    <!-- Service status -->
+    <string name="service_status_off">Выключено</string>
+    <string name="service_status_waiting">Ожидание выбранного приложения</string>
+    <string name="service_status_active">Активно: %1$s</string>
+    <string name="service_status_paused_debug">Приостановлено: открыт экран отладки</string>
+    <string name="service_status_screen_off">Приостановлено: экран выключен</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Управление жестами</string>
+    <string name="notification_title">Управление жестами включено</string>
+    <string name="notification_stop">Стоп</string>
+
+    <!-- Accessibility service -->
+    <string name="accessibility_service_description">GestureControl использует эту службу только для того, чтобы узнать, какое приложение сейчас на экране, и включать жесты только в выбранных вами приложениях. Служба не читает содержимое экрана и вводимый текст.</string>
+
+    <!-- App selection -->
+    <string name="apps_title">Выбор приложений</string>
+    <string name="apps_search">Поиск</string>
+    <string name="apps_empty">Приложения не найдены</string>
+
+    <!-- Debug screen -->
+    <string name="debug_title">Отладка</string>
+    <string name="debug_no_camera_permission">Нужно разрешение на камеру</string>
+    <string name="debug_state">Состояние: %1$s</string>
+    <string name="debug_fps">Анализ: %1$.1f к/с</string>
+    <string name="debug_power_save_on">энергосбережение</string>
+    <string name="debug_last_gesture">Последний жест: %1$s</string>
+    <string name="debug_none">—</string>
+    <string name="debug_execute_actions">Выполнять действия</string>
+    <string name="debug_record_start">Записать точки</string>
+    <string name="debug_record_stop">Остановить запись (кадров: %1$d)</string>
+    <string name="debug_record_saved">Сохранено: %1$s</string>
+
+    <!-- Engine states and gestures -->
+    <string name="state_no_hand">Нет руки</string>
+    <string name="state_tracking">Отслеживание</string>
+    <string name="state_palm_holding">Ладонь %1$d%%</string>
+    <string name="state_palm_latched">Ладонь (опустите руку)</string>
+    <string name="state_cooldown">Пауза</string>
+    <string name="gesture_swipe_left">Свайп влево</string>
+    <string name="gesture_swipe_right">Свайп вправо</string>
+    <string name="gesture_open_palm">Ладонь</string>
+</resources>

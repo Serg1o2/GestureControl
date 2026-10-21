@@ -1,4 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GestureControl</string>
+    <string name="nav_back">Back</string>
+
+    <!-- Main screen -->
+    <string name="main_toggle_label">Gesture control</string>
+    <string name="main_toggle_on">Works in the selected apps</string>
+    <string name="main_toggle_off">Off</string>
+    <string name="main_setup_section">Setup</string>
+    <string name="perm_camera">Camera</string>
+    <string name="perm_camera_desc">Needed to see your hand. Video never leaves the device.</string>
+    <string name="perm_notifications">Notifications</string>
+    <string name="perm_notifications_desc">Status of gesture control and the Stop button</string>
+    <string name="perm_accessibility">Accessibility service</string>
+    <string name="perm_accessibility_desc">Detects which app is on screen, so gestures work only where you allow them</string>
+    <string name="perm_accessibility_restricted_hint">If the switch is greyed out: App info → ⋮ → Allow restricted settings</string>
+    <string name="action_grant">Allow</string>
+    <string name="action_open_settings">Open settings</string>
+    <string name="status_granted">Granted</string>
+    <string name="status_enabled">Enabled</string>
+    <string name="main_apps_section">Apps</string>
+    <string name="main_apps_selected">Selected: %1$d</string>
+    <string name="main_apps_choose">Choose apps</string>
+    <string name="main_apps_none_hint">Choose at least one app where gestures will work</string>
+    <string name="main_gestures_section">Gestures</string>
+    <string name="gesture_swipe_right_desc">Swipe right → next track</string>
+    <string name="gesture_swipe_left_desc">Swipe left → previous track</string>
+    <string name="gesture_palm_desc">Open palm, hold 0.5 s → play / pause</string>
+    <string name="power_save_title">Power saving</string>
+    <string name="power_save_desc">Analyze 10 frames per second while no hand is visible</string>
+    <string name="main_debug_open">Debug screen</string>
+    <string name="main_privacy_note">Video is processed on the device only. It is never saved or sent anywhere.</string>
+    <string name="main_requirements_missing">Allow camera access and enable the accessibility service first</string>
+
+    <!-- Service status -->
+    <string name="service_status_off">Off</string>
+    <string name="service_status_waiting">Waiting for a selected app</string>
+    <string name="service_status_active">Active: %1$s</string>
+    <string name="service_status_paused_debug">Paused while the debug screen is open</string>
+    <string name="service_status_screen_off">Paused: screen is off</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Gesture control</string>
+    <string name="notification_title">Gesture control is on</string>
+    <string name="notification_stop">Stop</string>
+
+    <!-- Accessibility service -->
+    <string name="accessibility_service_description">GestureControl uses this service only to find out which app is currently on screen, so that hand gestures work only in the apps you selected. It does not read screen content or what you type.</string>
+
+    <!-- App selection -->
+    <string name="apps_title">Choose apps</string>
+    <string name="apps_search">Search</string>
+    <string name="apps_empty">No apps found</string>
+
+    <!-- Debug screen -->
+    <string name="debug_title">Debug</string>
+    <string name="debug_no_camera_permission">Camera permission is required</string>
+    <string name="debug_state">State: %1$s</string>
+    <string name="debug_fps">Analysis: %1$.1f fps</string>
+    <string name="debug_power_save_on">power saving</string>
+    <string name="debug_last_gesture">Last gesture: %1$s</string>
+    <string name="debug_none">—</string>
+    <string name="debug_execute_actions">Execute actions</string>
+    <string name="debug_record_start">Record landmarks</string>
+    <string name="debug_record_stop">Stop recording (%1$d frames)</string>
+    <string name="debug_record_saved">Saved: %1$s</string>
+
+    <!-- Engine states and gestures -->
+    <string name="state_no_hand">No hand</string>
+    <string name="state_tracking">Tracking</string>
+    <string name="state_palm_holding">Palm %1$d%%</string>
+    <string name="state_palm_latched">Palm (lower your hand)</string>
+    <string name="state_cooldown">Cooldown</string>
+    <string name="gesture_swipe_left">Swipe left</string>
+    <string name="gesture_swipe_right">Swipe right</string>
+    <string name="gesture_open_palm">Open palm</string>
 </resources>
