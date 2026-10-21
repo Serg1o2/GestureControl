@@ -1,0 +1,73 @@
+package com.gesturecontrol.gestures
+
+/**
+ * All gesture thresholds in one place. Distances are in normalized frame units
+ * (1.0 = full frame width/height), velocities in frame units per second, times in milliseconds.
+ */
+data class GestureConfig(
+    val filter: FilterConfig = FilterConfig(),
+    val swipe: SwipeConfig = SwipeConfig(),
+    val palm: PalmConfig = PalmConfig(),
+    /** Global debounce: no gesture can fire within this time after any gesture. */
+    val cooldownMs: Long = 600,
+    /** Hand absence shorter than this is treated as a detector dropout, not as the hand leaving. */
+    val handLostToleranceMs: Long = 150,
+)
+
+/** One Euro filter parameters (see https://gery.casiez.net/1euro/). */
+data class FilterConfig(
+    val enabled: Boolean = true,
+    /** Cutoff at zero speed, Hz. Lower = less jitter, more lag. */
+    val minCutoff: Float = 1.5f,
+    /** Speed coefficient. Higher = less lag during fast motion. */
+    val beta: Float = 0.5f,
+    /** Cutoff for the derivative, Hz. */
+    val dCutoff: Float = 1.0f,
+)
+
+enum class TrackedPoint(val indices: List<Int>) {
+    WRIST(listOf(HandLandmarks.WRIST)),
+    INDEX_TIP(listOf(HandLandmarks.INDEX_TIP)),
+
+    /** Average of the wrist and finger MCP joints: the most stable choice. */
+    PALM_CENTER(
+        listOf(
+            HandLandmarks.WRIST, HandLandmarks.INDEX_MCP, HandLandmarks.MIDDLE_MCP,
+            HandLandmarks.RING_MCP, HandLandmarks.PINKY_MCP,
+        ),
+    ),
+}
+
+data class SwipeConfig(
+    val trackedPoint: TrackedPoint = TrackedPoint.PALM_CENTER,
+    /** Minimum horizontal travel of the tracked point. */
+    val minDistance: Float = 0.25f,
+    /** Minimum average horizontal speed over the swipe. */
+    val minVelocity: Float = 0.8f,
+    /** The whole swipe must fit into this window. */
+    val maxDurationMs: Long = 600,
+    /** |dx| must be at least this many times larger than |dy|. */
+    val axisDominance: Float = 1.5f,
+    /**
+     * After a swipe, the opposite swipe is ignored for this long,
+     * so that bringing the hand back does not trigger the reverse action.
+     */
+    val oppositeSuppressMs: Long = 900,
+)
+
+data class PalmConfig(
+    /** How long the open palm must be held still. */
+    val holdMs: Long = 500,
+    /** Max speed of the palm center while holding. */
+    val maxVelocity: Float = 0.25f,
+    /** Window over which the palm speed is measured. */
+    val velocityWindowMs: Long = 150,
+    /** Short misclassifications within the hold are tolerated up to this duration. */
+    val dropoutToleranceMs: Long = 120,
+    /** A finger is extended when dist(wrist, tip) > dist(wrist, pip) * ratio. */
+    val fingerExtensionRatio: Float = 1.1f,
+    /** The thumb is extended when dist(tip, pinkyMcp) > dist(ip, pinkyMcp) * ratio. */
+    val thumbExtensionRatio: Float = 1.0f,
+    /** Whether the thumb must be extended for an open palm. */
+    val requireThumb: Boolean = true,
+)
