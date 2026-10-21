@@ -43,6 +43,10 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 // Downloads the MediaPipe hand landmarker model once; it is not committed to git.
 val downloadHandModel by tasks.registering {
     val modelFile = layout.projectDirectory.file("src/main/assets/hand_landmarker.task").asFile

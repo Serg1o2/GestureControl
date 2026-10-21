@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.gesturecontrol.ui.apps.AppSelectionScreen
 import com.gesturecontrol.ui.debug.DebugScreen
 import com.gesturecontrol.ui.main.MainScreen
 import com.gesturecontrol.ui.theme.GestureControlTheme
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
                             onOpenDebug = { nav.navigate(Routes.DEBUG) },
                         )
                     }
+                    composable(Routes.APPS) { AppSelectionScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.DEBUG) { DebugScreen(onBack = { nav.popBackStack() }) }
                 }
             }
