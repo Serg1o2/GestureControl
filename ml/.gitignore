@@ -6,3 +6,4 @@ artifacts/**/*_float.tflite
 __pycache__/
 *.pyc
 artifacts/*pilot*/
+artifacts/baseline/collected.json
