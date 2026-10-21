@@ -37,7 +37,7 @@ data class PointerConfig(
      */
     val pinchMinIndexReach: Float = 1.0f,
     /** The press lands where the cursor was this long before the pinch started closing. */
-    val pressRollbackMs: Long = 0,
+    val pressRollbackMs: Long = 80,
 
     val dwellMs: Long = 500,
     /** No press of any kind within this time after a press. */
