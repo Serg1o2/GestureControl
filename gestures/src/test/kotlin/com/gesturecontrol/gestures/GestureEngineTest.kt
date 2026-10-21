@@ -47,6 +47,18 @@ class GestureEngineTest {
     }
 
     @Test
+    fun fastPointingOrTwoFingerMotionIsNotASwipe() {
+        val pointing = SyntheticHand.Sequence()
+            .move(Pose.POINTING, 0.2f, 0.7f, 0.7f, 0.7f, 300)
+            .build()
+        val twoFingers = SyntheticHand.Sequence()
+            .move(Pose.TWO_FINGERS, 0.7f, 0.7f, 0.2f, 0.7f, 300)
+            .build()
+        assertEquals(emptyList<Gesture>(), gestures(pointing))
+        assertEquals(emptyList<Gesture>(), gestures(twoFingers))
+    }
+
+    @Test
     fun slowDriftIsIgnored() {
         val frames = SyntheticHand.Sequence()
             .move(Pose.FIST, 0.2f, 0.7f, 0.7f, 0.7f, 2000)

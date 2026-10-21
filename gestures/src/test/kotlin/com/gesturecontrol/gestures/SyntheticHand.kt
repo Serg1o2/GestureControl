@@ -24,11 +24,37 @@ object SyntheticHand {
         0.055f to -0.11f, 0.06f to -0.125f, 0.058f to -0.10f, 0.055f to -0.088f,
     )
 
-    enum class Pose { OPEN_PALM, FIST }
+    /** Mixes palm and fist offsets: landmark indices in [openIndices] come from the open palm. */
+    private fun mix(openIndices: IntRange): List<Pair<Float, Float>> =
+        FIST.indices.map { if (it in openIndices) OPEN_PALM[it] else FIST[it] }
+
+    private val POINTING = mix(HandLandmarks.INDEX_MCP..HandLandmarks.INDEX_TIP)
+    private val TWO_FINGERS = mix(HandLandmarks.INDEX_MCP..HandLandmarks.MIDDLE_TIP)
+
+    // Pointing hand with the index tip bent down onto the thumb tip.
+    private val PINCH = POINTING.toMutableList().apply {
+        this[HandLandmarks.INDEX_DIP] = -0.06f to -0.19f
+        this[HandLandmarks.INDEX_TIP] = -0.07f to -0.16f
+        this[HandLandmarks.THUMB_IP] = -0.08f to -0.11f
+        this[HandLandmarks.THUMB_TIP] = -0.075f to -0.15f
+    }
+
+    enum class Pose { OPEN_PALM, FIST, POINTING, TWO_FINGERS, PINCH }
+
+    /** Offset of the index fingertip from the wrist for [pose] (the cursor anchor). */
+    fun indexTipOffset(pose: Pose): Pair<Float, Float> = offsets(pose)[HandLandmarks.INDEX_TIP]
+
+    private fun offsets(pose: Pose) = when (pose) {
+        Pose.OPEN_PALM -> OPEN_PALM
+        Pose.FIST -> FIST
+        Pose.POINTING -> POINTING
+        Pose.TWO_FINGERS -> TWO_FINGERS
+        Pose.PINCH -> PINCH
+    }
 
     /** Landmarks with the wrist at (wx, wy). */
     fun pose(pose: Pose, wx: Float, wy: Float, scale: Float = 1f, noise: Float = 0f, rnd: Random = Random(0)): List<Landmark> {
-        val offsets = if (pose == Pose.OPEN_PALM) OPEN_PALM else FIST
+        val offsets = offsets(pose)
         return offsets.map { (dx, dy) ->
             Landmark(
                 x = wx + dx * scale + if (noise > 0f) (rnd.nextFloat() - 0.5f) * 2 * noise else 0f,

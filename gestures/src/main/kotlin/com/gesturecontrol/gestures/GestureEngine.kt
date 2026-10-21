@@ -71,7 +71,10 @@ class GestureEngine(private val config: GestureConfig = GestureConfig()) {
         val (sx, sy) = lm.centroid(config.swipe.trackedPoint.indices)
         val (px, py) = lm.centroid(TrackedPoint.PALM_CENTER.indices)
         palmTrajectory.add(t, px, py)
-        val isPalm = classifier.isOpenPalm(lm)
+        val pose = classifier.classify(lm)
+        val isPalm = pose == HandPose.OPEN_PALM
+        // Cursor and scroll poses belong to the pointer layer: a fast pointer move is not a track swipe.
+        val pointerPose = pose == HandPose.POINTING || pose == HandPose.TWO_FINGERS
         val palmStill = palmTrajectory.speed(config.palm.velocityWindowMs) <= config.palm.maxVelocity
 
         updatePalmLatch(t, isPalm)
@@ -82,6 +85,11 @@ class GestureEngine(private val config: GestureConfig = GestureConfig()) {
             resetPalmHold()
             state = if (palmLatched) EngineState.PalmLatched else EngineState.Cooldown(cooldownUntil - t)
             return null
+        }
+
+        if (pointerPose) {
+            swipeDetector.reset()
+            return updatePalmHold(t, good = false)
         }
 
         swipeDetector.update(t, sx, sy)?.let { dir ->
