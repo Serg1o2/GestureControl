@@ -5,6 +5,7 @@ import androidx.camera.core.Preview
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gesturecontrol.actions.ActionDispatcher
 import com.gesturecontrol.camera.CameraController
 import com.gesturecontrol.gestures.EngineState
 import com.gesturecontrol.gestures.Gesture
@@ -32,6 +33,7 @@ data class DebugUiState(
     val engineState: EngineState = EngineState.NoHand,
     val fps: Float = 0f,
     val lastGesture: Gesture? = null,
+    val executeActions: Boolean = false,
     val recordingFrames: Int? = null,
     val savedFile: String? = null,
 )
@@ -39,6 +41,7 @@ data class DebugUiState(
 @HiltViewModel
 class DebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val actionDispatcher: ActionDispatcher,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DebugUiState())
@@ -64,8 +67,12 @@ class DebugViewModel @Inject constructor(
         stopRecording()
     }
 
+    fun setExecuteActions(enabled: Boolean) = _state.update { it.copy(executeActions = enabled) }
+
     /** Called on the analysis thread. */
     private fun onResult(result: AnalysisResult) {
+        val event = result.event
+        if (event != null && _state.value.executeActions) actionDispatcher.dispatch(event.gesture)
         recorder?.let { rec ->
             rec.write(result.frame)
             _state.update { it.copy(recordingFrames = rec.frameCount) }
