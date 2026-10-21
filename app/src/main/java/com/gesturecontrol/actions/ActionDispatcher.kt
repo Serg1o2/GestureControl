@@ -5,6 +5,7 @@ import android.media.AudioManager
 import android.util.Log
 import android.view.KeyEvent
 import com.gesturecontrol.gestures.Gesture
+import com.gesturecontrol.gestures.mapping.MediaKind
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,6 +25,16 @@ class ActionDispatcher @Inject constructor(@ApplicationContext context: Context)
         val action = bindings[gesture] ?: return
         Log.d(TAG, "$gesture -> $action")
         action.perform()
+    }
+
+    /** Media action assigned to a screen zone. */
+    fun dispatchMedia(kind: MediaKind) {
+        val keyCode = when (kind) {
+            MediaKind.NEXT -> KeyEvent.KEYCODE_MEDIA_NEXT
+            MediaKind.PREVIOUS -> KeyEvent.KEYCODE_MEDIA_PREVIOUS
+            MediaKind.PLAY_PAUSE -> KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+        }
+        MediaKeyAction(audioManager, keyCode).perform()
     }
 
     private companion object {

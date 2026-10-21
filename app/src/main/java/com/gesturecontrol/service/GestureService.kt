@@ -6,33 +6,52 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.hardware.display.DisplayManager
+import android.graphics.Point
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import android.view.Display
+import android.widget.Toast
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
+import com.gesturecontrol.R
 import com.gesturecontrol.accessibility.ForegroundAppTracker
+import com.gesturecontrol.accessibility.OverlayState
+import com.gesturecontrol.accessibility.PointerBridge
 import com.gesturecontrol.actions.ActionDispatcher
 import com.gesturecontrol.camera.CameraController
 import com.gesturecontrol.data.InstalledAppsRepository
 import com.gesturecontrol.data.SelectedAppsRepository
 import com.gesturecontrol.data.SettingsRepository
+import com.gesturecontrol.data.ZoneRepository
 import com.gesturecontrol.gestures.GestureConfig
 import com.gesturecontrol.gestures.GestureEngine
 import com.gesturecontrol.gestures.PowerSaveConfig
 import com.gesturecontrol.gestures.PowerSaveThrottler
+import com.gesturecontrol.gestures.mapping.CommandPlanner
+import com.gesturecontrol.gestures.mapping.ScreenMapper
+import com.gesturecontrol.gestures.mapping.TouchCommand
+import com.gesturecontrol.gestures.mapping.ZoneSet
+import com.gesturecontrol.gestures.pointer.PointerConfig
+import com.gesturecontrol.gestures.pointer.PointerEngine
+import com.gesturecontrol.gestures.pointer.PointerEvent
+import com.gesturecontrol.gestures.pointer.PressMode
 import com.gesturecontrol.ui.hasPermission
+import com.gesturecontrol.vision.AnalysisResult
 import com.gesturecontrol.vision.HandAnalyzer
 import com.gesturecontrol.vision.HandLandmarkerEngine
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -53,13 +72,21 @@ class GestureService : LifecycleService() {
     @Inject lateinit var installedApps: InstalledAppsRepository
     @Inject lateinit var settings: SettingsRepository
     @Inject lateinit var actionDispatcher: ActionDispatcher
+    @Inject lateinit var zones: ZoneRepository
+    @Inject lateinit var bridge: PointerBridge
 
     private lateinit var camera: CameraController
+    private val mainHandler = Handler(Looper.getMainLooper())
     private var landmarker: HandLandmarkerEngine? = null
     private var gateJob: Job? = null
 
-    /** Power-save setting the camera is currently bound with; null when unbound. */
-    private var boundWithPowerSave: Boolean? = null
+    /** Settings the camera is currently bound with; null when unbound. */
+    private var boundWith: BindKey? = null
+
+    /** Read on the analysis thread, written on the main thread. */
+    @Volatile private var pointerEngine: PointerEngine? = null
+    @Volatile private var currentZones: ZoneSet = ZoneSet.EMPTY
+    @Volatile private var currentMapper: ScreenMapper = ScreenMapper.fromRegion()
 
     private val displayListener = object : DisplayManager.DisplayListener {
         override fun onDisplayChanged(displayId: Int) {
@@ -87,7 +114,10 @@ class GestureService : LifecycleService() {
             stopSelf()
             return START_NOT_STICKY
         }
-        if (gateJob == null) gateJob = lifecycleScope.launch { observeGate() }
+        if (gateJob == null) {
+            gateJob = lifecycleScope.launch { observeGate() }
+            lifecycleScope.launch { observePointerInputs() }
+        }
         return START_NOT_STICKY
     }
 
@@ -106,14 +136,24 @@ class GestureService : LifecycleService() {
         }
     }
 
+    /** Settings that require a new analyzer; calibration and zones are updated live instead. */
+    private data class BindKey(
+        val powerSave: Boolean,
+        val cursorEnabled: Boolean,
+        val pressMode: PressMode,
+        val deadZone: Float,
+    )
+
     private suspend fun observeGate() {
         combine(
             serviceState.debugPreviewActive,
             screenOnFlow(this),
             foregroundApps.foregroundPackage,
             selectedApps.selectedPackages,
-            settings.powerSaveEnabled,
-        ) { debug, screenOn, foreground, selected, powerSave ->
+            combine(settings.powerSaveEnabled, settings.pointerSettings) { powerSave, pointer ->
+                BindKey(powerSave, pointer.enabled, pointer.pressMode, pointer.deadZone)
+            },
+        ) { debug, screenOn, foreground, selected, key ->
             val status = when {
                 debug -> ServiceStatus.PausedDebug
                 !screenOn -> ServiceStatus.ScreenOff
@@ -121,45 +161,115 @@ class GestureService : LifecycleService() {
                     ServiceStatus.Active(foreground, installedApps.labelOf(foreground))
                 else -> ServiceStatus.Waiting
             }
-            status to powerSave
-        }.distinctUntilChanged().collect { (status, powerSave) -> apply(status, powerSave) }
+            status to key
+        }.distinctUntilChanged().collect { (status, key) -> apply(status, key) }
     }
 
-    private suspend fun apply(status: ServiceStatus, powerSave: Boolean) {
+    /** Keeps the pointer engine's calibration and the zones of the app on screen up to date. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private suspend fun observePointerInputs() {
+        combine(
+            foregroundApps.foregroundPackage.flatMapLatest { pkg ->
+                if (pkg == null) flowOf(emptyList()) else zones.zonesFor(pkg)
+            },
+            settings.pointerSettings,
+        ) { zoneList, pointer -> ZoneSet(zoneList) to pointer.mapper }
+            .collect { (zoneSet, mapper) ->
+                currentZones = zoneSet
+                currentMapper = mapper
+                pointerEngine?.let {
+                    it.zones = zoneSet
+                    it.mapper = mapper
+                }
+            }
+    }
+
+    private suspend fun apply(status: ServiceStatus, key: BindKey) {
         serviceState.status.value = status
         getSystemService(NotificationManager::class.java).notify(
             GestureNotifications.NOTIFICATION_ID,
             GestureNotifications.build(this, GestureNotifications.statusText(this, status)),
         )
         if (status is ServiceStatus.Active) {
-            if (boundWithPowerSave != powerSave) bindCamera(powerSave)
+            if (boundWith != key) bindCamera(key)
         } else {
             unbindCamera()
         }
     }
 
-    private suspend fun bindCamera(powerSave: Boolean) {
+    private suspend fun bindCamera(key: BindKey) {
         val engine = landmarker ?: withContext(Dispatchers.Default) { HandLandmarkerEngine(this@GestureService) }
             .also { landmarker = it }
+        val pointer = if (key.cursorEnabled) {
+            PointerEngine(PointerConfig(pressMode = key.pressMode, deadZone = key.deadZone), screenAspect()).apply {
+                zones = currentZones
+                mapper = currentMapper
+            }
+        } else {
+            null
+        }
+        pointerEngine = pointer
         val analyzer = HandAnalyzer(
             landmarker = engine,
             gestureEngine = GestureEngine(GestureConfig()),
-            throttler = PowerSaveThrottler(PowerSaveConfig(enabled = powerSave)),
-        ) { result ->
-            result.event?.let { actionDispatcher.dispatch(it.gesture) }
-        }
+            throttler = PowerSaveThrottler(PowerSaveConfig(enabled = key.powerSave)),
+            pointerEngine = pointer,
+            onResult = ::onAnalysisResult,
+        )
         try {
             camera.bind(this, analyzer, displayRotation())
-            boundWithPowerSave = powerSave
+            boundWith = key
         } catch (e: Exception) {
             Log.e(TAG, "Camera bind failed", e)
-            boundWithPowerSave = null
+            boundWith = null
         }
+    }
+
+    /** Called on the analysis thread. */
+    private fun onAnalysisResult(result: AnalysisResult) {
+        result.event?.let { actionDispatcher.dispatch(it.gesture) }
+        val pointer = result.pointer ?: return
+        // A frame still in flight after unbind must not bring the cursor back.
+        if (pointerEngine == null) return
+        bridge.overlay.value = OverlayState(
+            cursor = pointer.cursor,
+            pinchClosed = pointer.pinchClosed,
+            dwellProgress = pointer.dwellProgress,
+            hoveredZone = pointer.hoveredZone?.rect,
+        )
+        val command = when (val event = pointer.event) {
+            is PointerEvent.Press -> CommandPlanner.forPress(event.at, event.zone)
+            is PointerEvent.Scroll -> CommandPlanner.forScroll(event.direction)
+            null -> return
+        }
+        if (command is TouchCommand.Media) {
+            actionDispatcher.dispatchMedia(command.kind)
+        } else if (!bridge.send(command)) {
+            mainHandler.post { warnAccessibilityOff() }
+        }
+    }
+
+    private var lastAccessibilityWarningMs = 0L
+
+    private fun warnAccessibilityOff() {
+        val now = SystemClock.uptimeMillis()
+        if (now - lastAccessibilityWarningMs < 5000) return
+        lastAccessibilityWarningMs = now
+        Toast.makeText(this, R.string.hint_accessibility_off, Toast.LENGTH_SHORT).show()
     }
 
     private fun unbindCamera() {
         camera.unbind()
-        boundWithPowerSave = null
+        boundWith = null
+        pointerEngine = null
+        bridge.overlay.value = OverlayState()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun screenAspect(): Float {
+        val p = Point()
+        getSystemService(DisplayManager::class.java).getDisplay(Display.DEFAULT_DISPLAY)?.getRealSize(p)
+        return if (p.x > 0) p.y.toFloat() / p.x else 2f
     }
 
     private fun displayRotation(): Int =

@@ -11,6 +11,8 @@ import com.gesturecontrol.gestures.GestureEvent
 import com.gesturecontrol.gestures.HandFrame
 import com.gesturecontrol.gestures.Landmark
 import com.gesturecontrol.gestures.PowerSaveThrottler
+import com.gesturecontrol.gestures.pointer.PointerEngine
+import com.gesturecontrol.gestures.pointer.PointerOutput
 
 /** Result of analyzing one camera frame. */
 data class AnalysisResult(
@@ -24,6 +26,8 @@ data class AnalysisResult(
     val fps: Float,
     /** True while analysis runs at the reduced idle frame rate. */
     val powerSaving: Boolean,
+    /** Cursor-mode output, null when cursor mode is off. */
+    val pointer: PointerOutput?,
 )
 
 /**
@@ -34,6 +38,7 @@ class HandAnalyzer(
     private val landmarker: HandLandmarkerEngine,
     private val gestureEngine: GestureEngine,
     private val throttler: PowerSaveThrottler,
+    private val pointerEngine: PointerEngine? = null,
     private val mirror: Boolean = true,
     private val onResult: (AnalysisResult) -> Unit,
 ) : ImageAnalysis.Analyzer {
@@ -56,6 +61,7 @@ class HandAnalyzer(
                 throttler.onProcessed(timestampMs, landmarks != null)
                 val frame = HandFrame(timestampMs, landmarks)
                 val event = gestureEngine.process(frame)
+                val pointer = pointerEngine?.process(frame)
                 onResult(
                     AnalysisResult(
                         frame = frame,
@@ -65,6 +71,7 @@ class HandAnalyzer(
                         aspectRatio = bitmap.width.toFloat() / bitmap.height,
                         fps = fps,
                         powerSaving = throttler.isIdle,
+                        pointer = pointer,
                     ),
                 )
                 bitmap.recycle()
