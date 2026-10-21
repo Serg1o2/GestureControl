@@ -79,6 +79,10 @@ def main() -> None:
     # 5. Parity vectors and app assets.
     run(PY_EXTRACT, "gc_ml.export_vectors", "--what", "norm")
     run(PY_TRAIN, "gc_ml.export_vectors", "--what", "model")
+    run(PY_TRAIN, "gc_ml.export_vectors", "--what", "weights")
+    run(PY_EXTRACT, "gc_ml.baseline", "collect", "--per-class", "5" if pilot else "20")
+    run(PY_TRAIN, "gc_ml.baseline", "evaluate")
+    run(PY_EXTRACT, "gc_ml.accuracy_doc")
     ASSETS.mkdir(parents=True, exist_ok=True)
     for f in ("pose_mlp.tflite", "pose_mlp.json"):
         shutil.copy2(ML / "artifacts" / "static" / f, ASSETS / f)

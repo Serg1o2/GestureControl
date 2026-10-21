@@ -65,15 +65,50 @@ def export_model(out: Path, model: Path, features: Path, n: int) -> None:
     print(f"{out}: {len(x)} rows")
 
 
+def export_weights(keras_path: Path, features: Path, n: int) -> None:
+    """Dense weights for the JVM twin (DenseMlp) plus float-model vectors to compare against."""
+    import tensorflow as tf
+
+    from .classes import POSE_CLASSES
+
+    model = tf.keras.models.load_model(keras_path)
+    res = REPO / "gestures" / "src" / "test" / "resources" / "ml"
+    res.mkdir(parents=True, exist_ok=True)
+    with (res / "pose_mlp_weights.txt").open("w", newline="\n") as f:
+        f.write("classes " + ",".join(POSE_CLASSES) + "\n")
+        for layer in model.layers:
+            if not isinstance(layer, tf.keras.layers.Dense):
+                continue  # Input / Dropout do not change inference
+            w, b = layer.get_weights()
+            act = layer.get_config()["activation"]
+            f.write(f"layer {w.shape[0]} {w.shape[1]} {act}\n")
+            for row in w:
+                f.write(",".join(repr(float(v)) for v in row) + "\n")
+            f.write(",".join(repr(float(v)) for v in b) + "\n")
+    rng = np.random.default_rng(SEED)
+    d = np.load(features)
+    test = d["x"][d["split"] == 2]
+    x = test[rng.permutation(len(test))[:n]]
+    p = model.predict(x, verbose=0)
+    with (res / "pose_mlp_vectors.csv").open("w", newline="\n") as f:
+        f.write("# 42 features, expected probabilities of the float Keras model\n")
+        for xi, pi in zip(x, p):
+            f.write(",".join(repr(float(v)) for v in [*xi, *pi]) + "\n")
+    print(f"{res}: weights + {len(x)} vectors")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--what", choices=["norm", "model"], required=True)
+    ap.add_argument("--what", choices=["norm", "model", "weights"], required=True)
+    ap.add_argument("--keras", type=Path, default=ROOT / "artifacts" / "static" / "pose_mlp.keras")
     ap.add_argument("--n", type=int, default=200)
     ap.add_argument("--landmarks", type=Path, default=ROOT / "data" / "features" / "hagrid_sample_landmarks.npz")
     ap.add_argument("--model", type=Path, default=ROOT / "artifacts" / "static" / "pose_mlp.tflite")
     ap.add_argument("--features", type=Path, default=ROOT / "data" / "features" / "static_hagrid_ann.npz")
     args = ap.parse_args()
-    if args.what == "norm":
+    if args.what == "weights":
+        export_weights(args.keras, args.features, args.n)
+    elif args.what == "norm":
         export_norm(REPO / "gestures" / "src" / "test" / "resources" / "ml" / "norm_vectors.csv", args.n, args.landmarks)
     else:
         export_model(REPO / "app" / "src" / "androidTest" / "assets" / "pose_vectors.csv", args.model, args.features, args.n)
