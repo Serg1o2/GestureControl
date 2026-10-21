@@ -17,7 +17,8 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "0.3.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Phones (arm) plus x86_64 for the emulator; drops 32-bit x86 MediaPipe libraries.
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64") }
@@ -41,8 +42,8 @@ android {
         buildConfig = true
     }
     androidResources {
-        // The model must stay uncompressed so MediaPipe can memory-map it.
-        noCompress += "task"
+        // Models must stay uncompressed so MediaPipe / LiteRT can memory-map them.
+        noCompress += listOf("task", "tflite")
     }
 }
 
@@ -85,6 +86,7 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     implementation(libs.mediapipe.tasks.vision)
+    implementation(libs.litert)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
@@ -98,4 +100,6 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
 }

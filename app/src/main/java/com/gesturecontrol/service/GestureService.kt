@@ -45,6 +45,9 @@ import com.gesturecontrol.ui.hasPermission
 import com.gesturecontrol.vision.AnalysisResult
 import com.gesturecontrol.vision.HandAnalyzer
 import com.gesturecontrol.vision.HandLandmarkerEngine
+import com.gesturecontrol.vision.ClassifierKind
+import com.gesturecontrol.vision.PoseClassifierFactory
+import com.gesturecontrol.vision.PoseClassifiers
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -75,6 +78,10 @@ class GestureService : LifecycleService() {
     @Inject lateinit var actionDispatcher: ActionDispatcher
     @Inject lateinit var zones: ZoneRepository
     @Inject lateinit var bridge: PointerBridge
+    @Inject lateinit var classifierFactory: PoseClassifierFactory
+
+    /** Classifiers of the current binding; closed on the analysis thread after unbind. */
+    private var classifiers: PoseClassifiers? = null
 
     private lateinit var camera: CameraController
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -147,6 +154,7 @@ class GestureService : LifecycleService() {
         val cursorEnabled: Boolean,
         val pressMode: PressMode,
         val deadZone: Float,
+        val classifier: ClassifierKind,
     )
 
     private suspend fun observeGate() {
@@ -155,8 +163,8 @@ class GestureService : LifecycleService() {
             screenOnFlow(this),
             foregroundApps.foregroundPackage,
             selectedApps.selectedPackages,
-            combine(settings.powerSaveEnabled, settings.pointerSettings) { powerSave, pointer ->
-                BindKey(powerSave, pointer.enabled, pointer.pressMode, pointer.deadZone)
+            combine(settings.powerSaveEnabled, settings.pointerSettings, settings.classifierKind) { powerSave, pointer, kind ->
+                BindKey(powerSave, pointer.enabled, pointer.pressMode, pointer.deadZone, kind)
             },
         ) { debug, screenOn, foreground, selected, key ->
             val status = when {
@@ -217,8 +225,15 @@ class GestureService : LifecycleService() {
     private suspend fun bindCamera(key: BindKey) {
         val engine = landmarker ?: withContext(Dispatchers.Default) { HandLandmarkerEngine(this@GestureService) }
             .also { landmarker = it }
+        classifiers?.let { old -> camera.runOnAnalysisThread { old.close() } }
+        val poseClassifiers = withContext(Dispatchers.Default) { classifierFactory.create(key.classifier) }
+        classifiers = poseClassifiers
         val pointer = if (key.cursorEnabled) {
-            PointerEngine(PointerConfig(pressMode = key.pressMode, deadZone = key.deadZone), screenAspect()).apply {
+            PointerEngine(
+                PointerConfig(pressMode = key.pressMode, deadZone = key.deadZone),
+                screenAspect(),
+                poseClassifiers.forPointer,
+            ).apply {
                 zones = currentZones
                 mapper = currentMapper
             }
@@ -226,7 +241,7 @@ class GestureService : LifecycleService() {
             null
         }
         pointerEngine = pointer
-        val gestures = GestureEngine(GestureConfig())
+        val gestures = GestureEngine(GestureConfig(), poseClassifiers.forGestures)
         gestureEngine = gestures
         applyModeFlags()
         val analyzer = HandAnalyzer(
@@ -288,6 +303,8 @@ class GestureService : LifecycleService() {
 
     private fun unbindCamera() {
         camera.unbind()
+        classifiers?.let { old -> camera.runOnAnalysisThread { old.close() } }
+        classifiers = null
         boundWith = null
         pointerEngine = null
         gestureEngine = null

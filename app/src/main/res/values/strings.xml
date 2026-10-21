@@ -30,6 +30,11 @@
     <string name="gesture_finger_desc">Index finger flick left / right → swipe left / right on the screen (switches tracks in the player). In apps with zones the finger drives the cursor instead.</string>
     <string name="power_save_title">Power saving</string>
     <string name="power_save_desc">Analyze 10 frames per second while no hand is visible</string>
+    <string name="classifier_title">Pose recognition: trained model</string>
+    <string name="classifier_rules">Off: hand-written rules are used</string>
+    <string name="classifier_model_pending">On (applied when the camera starts)</string>
+    <string name="classifier_model_active">On, model %1$s</string>
+    <string name="classifier_model_fallback">Model unavailable: rules are used</string>
     <string name="main_debug_open">Debug screen</string>
     <string name="main_privacy_note">Video is processed on the device only. It is never saved or sent anywhere.</string>
     <string name="main_requirements_missing">Allow camera access and enable the accessibility service first</string>
@@ -131,6 +136,7 @@
     <string name="debug_last_gesture">Last gesture: %1$s</string>
     <string name="debug_none">—</string>
     <string name="debug_execute_actions">Execute actions</string>
+    <string name="debug_classifier">Classifier: %1$s · model %2$s</string>
     <string name="debug_pointer">Pose: %1$s · pinch: %2$s · cursor: %3$s</string>
     <string name="debug_last_pointer_event">Last cursor event: %1$s</string>
     <string name="debug_record_start">Record landmarks</string>

@@ -100,6 +100,11 @@ private fun DebugContent(viewModel: DebugViewModel) {
                     if (state.powerSaving) " · " + stringResource(R.string.debug_power_save_on) else "",
             )
             Text(stringResource(R.string.debug_last_gesture, state.lastGesture?.label() ?: stringResource(R.string.debug_none)))
+            val classifier by viewModel.classifierStatus.collectAsStateWithLifecycle()
+            Text(
+                stringResource(R.string.debug_classifier, classifier.active.name, classifier.modelVersion ?: stringResource(R.string.debug_none)),
+                style = MaterialTheme.typography.bodySmall,
+            )
             val pointer = state.pointer
             Text(
                 stringResource(

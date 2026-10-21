@@ -11,6 +11,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.gesturecontrol.gestures.mapping.ScreenMapper
 import com.gesturecontrol.gestures.pointer.PointerConfig
 import com.gesturecontrol.gestures.pointer.PressMode
+import com.gesturecontrol.vision.ClassifierKind
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -43,6 +44,15 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     suspend fun setPowerSaveEnabled(enabled: Boolean) {
         store.edit { it[POWER_SAVE] = enabled }
+    }
+
+    /** Pose recognition: the trained model by default, with automatic fallback to the rules. */
+    val classifierKind: Flow<ClassifierKind> = store.data.map { prefs ->
+        prefs[CLASSIFIER]?.let { runCatching { ClassifierKind.valueOf(it) }.getOrNull() } ?: ClassifierKind.MODEL
+    }
+
+    suspend fun setClassifierKind(kind: ClassifierKind) {
+        store.edit { it[CLASSIFIER] = kind.name }
     }
 
     val pointerSettings: Flow<PointerSettings> = store.data.map { prefs ->
@@ -78,5 +88,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val PRESS_MODE = stringPreferencesKey("press_mode")
         val DEAD_ZONE = floatPreferencesKey("dead_zone")
         val CALIBRATION = stringPreferencesKey("calibration")
+        val CLASSIFIER = stringPreferencesKey("pose_classifier")
     }
 }

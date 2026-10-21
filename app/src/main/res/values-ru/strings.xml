@@ -29,6 +29,11 @@
     <string name="gesture_finger_desc">Указательный палец влево / вправо → свайп влево / вправо по экрану (переключает треки в плеере). В приложениях с зонами палец двигает курсор.</string>
     <string name="power_save_title">Энергосбережение</string>
     <string name="power_save_desc">Анализировать 10 кадров в секунду, пока руки нет в кадре</string>
+    <string name="classifier_title">Распознавание поз: обученная модель</string>
+    <string name="classifier_rules">Выключено: используются правила</string>
+    <string name="classifier_model_pending">Включено (применится при запуске камеры)</string>
+    <string name="classifier_model_active">Включено, модель %1$s</string>
+    <string name="classifier_model_fallback">Модель недоступна: используются правила</string>
     <string name="main_debug_open">Экран отладки</string>
     <string name="main_privacy_note">Видео обрабатывается только на устройстве. Оно не сохраняется и никуда не передаётся.</string>
     <string name="main_requirements_missing">Сначала разрешите доступ к камере и включите службу специальных возможностей</string>
@@ -130,6 +135,7 @@
     <string name="debug_last_gesture">Последний жест: %1$s</string>
     <string name="debug_none">—</string>
     <string name="debug_execute_actions">Выполнять действия</string>
+    <string name="debug_classifier">Классификатор: %1$s · модель %2$s</string>
     <string name="debug_pointer">Поза: %1$s · щипок: %2$s · курсор: %3$s</string>
     <string name="debug_last_pointer_event">Последнее событие курсора: %1$s</string>
     <string name="debug_record_start">Записать точки</string>

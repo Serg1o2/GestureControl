@@ -41,6 +41,7 @@ import com.gesturecontrol.service.GestureNotifications
 import com.gesturecontrol.service.GestureService
 import com.gesturecontrol.service.ServiceStatus
 import com.gesturecontrol.ui.rememberPermissionState
+import com.gesturecontrol.vision.ClassifierKind
 import kotlinx.coroutines.launch
 
 @Composable
@@ -167,6 +168,25 @@ fun MainScreen(
                 }
                 Spacer(Modifier.width(12.dp))
                 Switch(checked = state.powerSave, onCheckedChange = viewModel::setPowerSave)
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.classifier_title), style = MaterialTheme.typography.titleMedium)
+                    val status = state.classifierStatus
+                    Text(
+                        when {
+                            state.classifier == ClassifierKind.RULES -> stringResource(R.string.classifier_rules)
+                            status == null -> stringResource(R.string.classifier_model_pending)
+                            status.active == ClassifierKind.MODEL ->
+                                stringResource(R.string.classifier_model_active, status.modelVersion.orEmpty())
+                            else -> stringResource(R.string.classifier_model_fallback)
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Switch(checked = state.classifier == ClassifierKind.MODEL, onCheckedChange = viewModel::setUseModel)
             }
 
             OutlinedButton(onClick = onOpenDebug) { Text(stringResource(R.string.main_debug_open)) }

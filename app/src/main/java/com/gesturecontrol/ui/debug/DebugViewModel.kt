@@ -25,6 +25,8 @@ import kotlinx.coroutines.flow.first
 import com.gesturecontrol.vision.AnalysisResult
 import com.gesturecontrol.vision.HandAnalyzer
 import com.gesturecontrol.vision.HandLandmarkerEngine
+import com.gesturecontrol.vision.PoseClassifierFactory
+import com.gesturecontrol.vision.PoseClassifiers
 import com.gesturecontrol.vision.LandmarkRecorder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -58,6 +60,7 @@ class DebugViewModel @Inject constructor(
     private val settings: SettingsRepository,
     private val serviceState: GestureServiceState,
     private val bridge: PointerBridge,
+    private val classifierFactory: PoseClassifierFactory,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DebugUiState())
@@ -65,6 +68,10 @@ class DebugViewModel @Inject constructor(
 
     private val camera = CameraController(context)
     private var landmarker: HandLandmarkerEngine? = null
+    private var classifiers: PoseClassifiers? = null
+
+    /** Which pose classifier is really running (the model may have fallen back to rules). */
+    val classifierStatus = classifierFactory.status
 
     @Volatile
     private var recorder: LandmarkRecorder? = null
@@ -77,8 +84,13 @@ class DebugViewModel @Inject constructor(
                 .also { landmarker = it }
             val throttler = PowerSaveThrottler(PowerSaveConfig(enabled = settings.powerSaveEnabled.first()))
             val pointerSettings = settings.pointerSettings.first()
-            val pointer = PointerEngine(pointerSettings.toConfig()).also { it.mapper = pointerSettings.mapper }
-            val analyzer = HandAnalyzer(engine, GestureEngine(GestureConfig()), throttler, pointer, onResult = ::onResult)
+            classifiers?.let { old -> camera.runOnAnalysisThread { old.close() } }
+            val poseClassifiers = withContext(Dispatchers.Default) { classifierFactory.create(settings.classifierKind.first()) }
+            classifiers = poseClassifiers
+            val pointer = PointerEngine(pointerSettings.toConfig(), poseClassifier = poseClassifiers.forPointer)
+                .also { it.mapper = pointerSettings.mapper }
+            val gestures = GestureEngine(GestureConfig(), poseClassifiers.forGestures)
+            val analyzer = HandAnalyzer(engine, gestures, throttler, pointer, onResult = ::onResult)
             camera.bind(owner, analyzer, rotation, surfaceProvider)
         }
     }
@@ -139,7 +151,11 @@ class DebugViewModel @Inject constructor(
     override fun onCleared() {
         stopCamera()
         val engine = landmarker
-        camera.runOnAnalysisThread { engine?.close() }
+        val cls = classifiers
+        camera.runOnAnalysisThread {
+            engine?.close()
+            cls?.close()
+        }
         camera.shutdown()
     }
 }
