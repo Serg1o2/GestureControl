@@ -12,7 +12,7 @@ import java.io.Closeable
 
 /**
  * Thin wrapper over MediaPipe Hand Landmarker in VIDEO mode (synchronous, one hand).
- * Must be used from a single thread; timestamps passed to [detect] must strictly increase.
+ * Must be used from a single thread.
  */
 class HandLandmarkerEngine(context: Context, delegate: Delegate = Delegate.CPU) : Closeable {
 
@@ -33,12 +33,17 @@ class HandLandmarkerEngine(context: Context, delegate: Delegate = Delegate.CPU) 
             .build(),
     )
 
+    private var lastTimestampMs = Long.MIN_VALUE / 2
+
     /**
      * Detects a hand on an upright, already mirrored bitmap.
      * @return 21 normalized landmarks in the bitmap's coordinates, or null when no hand is found.
      */
     fun detect(bitmap: Bitmap, timestampMs: Long): List<Landmark>? {
-        val result = landmarker.detectForVideo(BitmapImageBuilder(bitmap).build(), timestampMs)
+        // MediaPipe rejects non-increasing timestamps; this instance outlives camera rebinds.
+        val ts = maxOf(timestampMs, lastTimestampMs + 1)
+        lastTimestampMs = ts
+        val result = landmarker.detectForVideo(BitmapImageBuilder(bitmap).build(), ts)
         val hand = result.landmarks().firstOrNull() ?: return null
         return hand.map { Landmark(it.x(), it.y(), it.z()) }
     }
