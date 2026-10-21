@@ -95,6 +95,7 @@
     <string name="action_home">Домой</string>
     <string name="action_recents">Недавние приложения</string>
     <string name="action_notifications">Шторка уведомлений</string>
+    <string name="action_screenshot">Скриншот</string>
     <string name="action_media_next">Следующий трек</string>
     <string name="action_media_previous">Предыдущий трек</string>
     <string name="action_media_play_pause">Пауза / воспроизведение</string>
@@ -120,6 +121,7 @@
     <string name="hint_action_unavailable">Это действие недоступно</string>
     <string name="hint_screen_locked">Экран заблокирован</string>
     <string name="hint_accessibility_off">Включите службу специальных возможностей GestureControl</string>
+    <string name="action_failed">Не удалось выполнить действие</string>
 
     <!-- App selection -->
     <string name="apps_title">Выбор приложений</string>

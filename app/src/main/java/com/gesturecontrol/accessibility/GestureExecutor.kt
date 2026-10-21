@@ -82,6 +82,8 @@ class GestureExecutor(
         GlobalActionKind.HOME -> AccessibilityService.GLOBAL_ACTION_HOME
         GlobalActionKind.RECENTS -> AccessibilityService.GLOBAL_ACTION_RECENTS
         GlobalActionKind.NOTIFICATIONS -> AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS
+        // Available since Android 9; on older versions performGlobalAction returns false -> hint.
+        GlobalActionKind.SCREENSHOT -> AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT
     }
 
     private companion object {

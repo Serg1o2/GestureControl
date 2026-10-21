@@ -17,6 +17,7 @@ val ZONE_ACTIONS: List<ZoneAction> = listOf(
     ZoneAction.Global(GlobalActionKind.HOME),
     ZoneAction.Global(GlobalActionKind.RECENTS),
     ZoneAction.Global(GlobalActionKind.NOTIFICATIONS),
+    ZoneAction.Global(GlobalActionKind.SCREENSHOT),
     ZoneAction.Media(MediaKind.NEXT),
     ZoneAction.Media(MediaKind.PREVIOUS),
     ZoneAction.Media(MediaKind.PLAY_PAUSE),
@@ -32,6 +33,7 @@ fun ZoneAction.labelRes(): Int = when (this) {
         GlobalActionKind.HOME -> R.string.action_home
         GlobalActionKind.RECENTS -> R.string.action_recents
         GlobalActionKind.NOTIFICATIONS -> R.string.action_notifications
+        GlobalActionKind.SCREENSHOT -> R.string.action_screenshot
     }
     is ZoneAction.Media -> when (kind) {
         MediaKind.NEXT -> R.string.action_media_next

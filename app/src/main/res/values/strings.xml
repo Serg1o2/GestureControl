@@ -96,6 +96,7 @@
     <string name="action_home">Home</string>
     <string name="action_recents">Recent apps</string>
     <string name="action_notifications">Notification shade</string>
+    <string name="action_screenshot">Screenshot</string>
     <string name="action_media_next">Next track</string>
     <string name="action_media_previous">Previous track</string>
     <string name="action_media_play_pause">Play / pause</string>
@@ -121,6 +122,7 @@
     <string name="hint_action_unavailable">This action is not available</string>
     <string name="hint_screen_locked">The screen is locked</string>
     <string name="hint_accessibility_off">Turn on the GestureControl accessibility service</string>
+    <string name="action_failed">The action could not be performed</string>
 
     <!-- App selection -->
     <string name="apps_title">Choose apps</string>

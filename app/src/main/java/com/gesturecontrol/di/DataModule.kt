@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.gesturecontrol.data.AppDatabase
 import com.gesturecontrol.data.SelectedAppDao
 import com.gesturecontrol.data.ZoneDao
+import com.gesturecontrol.data.CustomGestureDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,4 +27,7 @@ object DataModule {
 
     @Provides
     fun provideZoneDao(db: AppDatabase): ZoneDao = db.zoneDao()
+
+    @Provides
+    fun provideCustomGestureDao(db: AppDatabase): CustomGestureDao = db.customGestureDao()
 }

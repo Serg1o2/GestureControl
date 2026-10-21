@@ -1,6 +1,6 @@
 package com.gesturecontrol.gestures.mapping
 
-enum class GlobalActionKind { BACK, HOME, RECENTS, NOTIFICATIONS }
+enum class GlobalActionKind { BACK, HOME, RECENTS, NOTIFICATIONS, SCREENSHOT }
 
 enum class MediaKind { NEXT, PREVIOUS, PLAY_PAUSE }
 
