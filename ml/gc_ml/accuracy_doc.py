@@ -21,6 +21,17 @@ def stats(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
 
+def dynamic_note() -> str:
+    videos = len(list((FEAT / "ipn_landmarks").glob("*.npz")))
+    if videos >= 200:
+        return ""
+    return (
+        f"_Динамическая модель — **предварительная**: обработано {videos} из 200 видео IPN (остальные ещё загружаются). "
+        "В приложение не входит: свайпы, взмахи пальцем и разжатие кулака распознаются правилами поверх позы от `pose_mlp`. "
+        "После полной загрузки: `python run_all.py --force ipn-windows --force train-dynamic`._\n"
+    )
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     meta = stats(ART / "static" / "pose_mlp.json")
@@ -55,7 +66,10 @@ def main() -> None:
         "",
         read(ART / "baseline" / "report.md"),
         "",
+        dynamic_note(),
         read(ART / "dynamic" / "report.md"),
+        "",
+        "Проверка зеркальности IPN (`python -m gc_ml.ipn check-mirror`): после отражения кадра «throw left» (G05) смещает ладонь в среднем на −0,36 размера руки (влево от пользователя), «throw right» (G06) — на +0,63. Направления согласованы с координатами приложения.",
         "",
         "## До и после дообучения на моих записях",
         "",

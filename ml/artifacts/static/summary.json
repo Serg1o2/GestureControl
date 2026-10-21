@@ -1,0 +1,34 @@
+{
+  "goals": [
+    {
+      "goal": "Static poses, accuracy ≥ 95%: HaGRID test (annotation landmarks)",
+      "value": "99.08%",
+      "status": "✅"
+    },
+    {
+      "goal": "Background false positives ≤ 2% per frame: HaGRID test (annotation landmarks)",
+      "value": "0.70%",
+      "status": "✅"
+    },
+    {
+      "goal": "Static poses, accuracy ≥ 95%: HaGRID test (our MediaPipe, true aspect)",
+      "value": "98.31%",
+      "status": "✅"
+    },
+    {
+      "goal": "Background false positives ≤ 2% per frame: HaGRID test (our MediaPipe, true aspect)",
+      "value": "1.40%",
+      "status": "✅"
+    },
+    {
+      "goal": "My phone recordings ≥ 90% after fine-tuning",
+      "value": "no recordings yet",
+      "status": "⏳"
+    },
+    {
+      "goal": "Inference ≤ 5 ms on the phone",
+      "value": "model 20592 B; measured by connectedDebugAndroidTest",
+      "status": "⏳"
+    }
+  ]
+}

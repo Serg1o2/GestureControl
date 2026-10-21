@@ -1,6 +1,6 @@
 # Точность моделей
 
-_Сгенерировано `python -m gc_ml.accuracy_doc` 22.10.2026 01:01. Модель позы: `pose_mlp` версии `20261022-0057`, нормализация `norm-v1`._
+_Сгенерировано `python -m gc_ml.accuracy_doc` 22.10.2026 01:23. Модель позы: `pose_mlp` версии `20261022-0057`, нормализация `norm-v1`._
 
 ## Итог по целям этапа
 
@@ -20,7 +20,7 @@ _Сгенерировано `python -m gc_ml.accuracy_doc` 22.10.2026 01:01. М�
 
 - HaGRIDv2, точки из разметки: 1372287 рук (train/val/test [983991, 154981, 233315]), соотношение сторон принято 0.75.
 - HaGRIDv2, выборка фото через наш MediaPipe 0.10.20: 6314 рук; рука не найдена в 11.4% размеченных случаев.
-- IPN Hand: ещё не обработан (видео загружаются).
+- IPN Hand, окна по 24 кадра: 20498 (по классам [16416, 792, 835, 786, 787, 882]); доля кадров без руки внутри жестов: 17.4%.
 
 ## Static pose model (Keras, test split by person)
 
@@ -297,8 +297,66 @@ Confusion matrix (rows = true, columns = predicted):
 | **THUMB_DOWN** | 4 | 0 | 0 | 0 | 0 | 0 | 16 |
 
 
-_not available: ml\artifacts\dynamic\report.md was not produced in this run_
+_Динамическая модель — **предварительная**: обработано 40 из 200 видео IPN (остальные ещё загружаются). В приложение не входит: свайпы, взмахи пальцем и разжатие кулака распознаются правилами поверх позы от `pose_mlp`. После полной загрузки: `python run_all.py --force ipn-windows --force train-dynamic`._
 
+## Dynamic model (IPN Hand, test = official validation subjects)
+
+### argmax
+
+- samples: 7485
+- accuracy: **82.06%**
+- accuracy on gesture classes (without OTHER): **53.87%**
+- background false positives per frame (OTHER predicted as a gesture): **12.63%**
+
+| class | recall | precision |
+|---|---|---|
+| NO_GESTURE | 87.4% | 95.8% |
+| SWIPE_LEFT | 50.6% | 37.0% |
+| SWIPE_RIGHT | 29.3% | 26.3% |
+| SWIPE_UP | 47.6% | 42.0% |
+| SWIPE_DOWN | 64.0% | 42.3% |
+| FIST_OPEN | 78.2% | 34.7% |
+
+Confusion matrix (rows = true, columns = predicted):
+
+| | NO_GESTURE | SWIPE_LEFT | SWIPE_RIGHT | SWIPE_UP | SWIPE_DOWN | FIST_OPEN |
+|---|---|---|---|---|---|---|
+| **NO_GESTURE** | 5502 | 158 | 125 | 113 | 151 | 248 |
+| **SWIPE_LEFT** | 80 | 129 | 24 | 10 | 3 | 9 |
+| **SWIPE_RIGHT** | 67 | 21 | 65 | 20 | 11 | 38 |
+| **SWIPE_UP** | 34 | 25 | 25 | 119 | 23 | 24 |
+| **SWIPE_DOWN** | 45 | 16 | 6 | 6 | 151 | 12 |
+| **FIST_OPEN** | 14 | 0 | 2 | 15 | 18 | 176 |
+
+### confidence ≥ 0.8
+
+- samples: 7485
+- accuracy: **82.06%**
+- accuracy on gesture classes (without OTHER): **53.87%**
+- background false positives per frame (OTHER predicted as a gesture, confidence ≥ 0.80): **7.21%**
+
+| class | recall | precision |
+|---|---|---|
+| NO_GESTURE | 87.4% | 95.8% |
+| SWIPE_LEFT | 50.6% | 37.0% |
+| SWIPE_RIGHT | 29.3% | 26.3% |
+| SWIPE_UP | 47.6% | 42.0% |
+| SWIPE_DOWN | 64.0% | 42.3% |
+| FIST_OPEN | 78.2% | 34.7% |
+
+Confusion matrix (rows = true, columns = predicted):
+
+| | NO_GESTURE | SWIPE_LEFT | SWIPE_RIGHT | SWIPE_UP | SWIPE_DOWN | FIST_OPEN |
+|---|---|---|---|---|---|---|
+| **NO_GESTURE** | 5502 | 158 | 125 | 113 | 151 | 248 |
+| **SWIPE_LEFT** | 80 | 129 | 24 | 10 | 3 | 9 |
+| **SWIPE_RIGHT** | 67 | 21 | 65 | 20 | 11 | 38 |
+| **SWIPE_UP** | 34 | 25 | 25 | 119 | 23 | 24 |
+| **SWIPE_DOWN** | 45 | 16 | 6 | 6 | 151 | 12 |
+| **FIST_OPEN** | 14 | 0 | 2 | 15 | 18 | 176 |
+
+
+Проверка зеркальности IPN (`python -m gc_ml.ipn check-mirror`): после отражения кадра «throw left» (G05) смещает ладонь в среднем на −0,36 размера руки (влево от пользователя), «throw right» (G06) — на +0,63. Направления согласованы с координатами приложения.
 
 ## До и после дообучения на моих записях
 

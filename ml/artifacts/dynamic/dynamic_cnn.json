@@ -1,0 +1,17 @@
+{
+  "name": "dynamic_cnn",
+  "version": "20261022-0122",
+  "norm": "norm-v1",
+  "window": 24,
+  "frame_features": 45,
+  "classes": [
+    "NO_GESTURE",
+    "SWIPE_LEFT",
+    "SWIPE_RIGHT",
+    "SWIPE_UP",
+    "SWIPE_DOWN",
+    "FIST_OPEN"
+  ],
+  "best_val_balanced_acc": 0.799477597456795,
+  "test_accuracy": 0.8205744822979292
+}
