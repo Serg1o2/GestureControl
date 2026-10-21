@@ -141,6 +141,8 @@
     <string name="debug_record_start">Записать точки</string>
     <string name="debug_record_stop">Остановить запись · кадров: %1$d</string>
     <string name="debug_record_saved">Сохранено: %1$s</string>
+    <string name="debug_training_label">Метка для обучения: %1$s</string>
+    <string name="debug_label_none">нет (тест движка)</string>
 
     <!-- Engine states and gestures -->
     <string name="state_no_hand">Нет руки</string>

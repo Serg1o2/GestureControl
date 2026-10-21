@@ -142,6 +142,8 @@
     <string name="debug_record_start">Record landmarks</string>
     <string name="debug_record_stop">Stop recording · frames: %1$d</string>
     <string name="debug_record_saved">Saved: %1$s</string>
+    <string name="debug_training_label">Label for training: %1$s</string>
+    <string name="debug_label_none">none (engine test)</string>
 
     <!-- Engine states and gestures -->
     <string name="state_no_hand">No hand</string>

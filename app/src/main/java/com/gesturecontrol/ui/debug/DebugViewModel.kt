@@ -50,6 +50,8 @@ data class DebugUiState(
     val lastGesture: Gesture? = null,
     val executeActions: Boolean = false,
     val recordingFrames: Int? = null,
+    /** Label for the training logger; null records an unlabeled engine test sequence. */
+    val trainingLabel: String? = null,
     val savedFile: String? = null,
 )
 
@@ -131,12 +133,17 @@ class DebugViewModel @Inject constructor(
         }
     }
 
+    fun setTrainingLabel(label: String?) = _state.update { it.copy(trainingLabel = label) }
+
     fun toggleRecording() {
         if (recorder != null) {
             stopRecording()
         } else {
-            val dir = context.getExternalFilesDir("recordings") ?: context.filesDir.resolve("recordings")
-            recorder = LandmarkRecorder(dir)
+            val label = _state.value.trainingLabel
+            // Labeled takes go to training/ (for the ML pipeline), unlabeled ones to recordings/.
+            val folder = if (label == null) "recordings" else "training"
+            val dir = context.getExternalFilesDir(folder) ?: context.filesDir.resolve(folder)
+            recorder = LandmarkRecorder(dir, label)
             _state.update { it.copy(recordingFrames = 0, savedFile = null) }
         }
     }

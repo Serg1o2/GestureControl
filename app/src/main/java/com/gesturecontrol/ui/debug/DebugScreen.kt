@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -25,6 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gesturecontrol.R
 import com.gesturecontrol.ui.label
 import com.gesturecontrol.ui.rememberPermissionState
+import com.gesturecontrol.vision.TRAINING_LABELS
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,6 +130,30 @@ private fun DebugContent(viewModel: DebugViewModel) {
                 Text(stringResource(R.string.debug_execute_actions))
             }
             val frames = state.recordingFrames
+            var labelMenu by remember { mutableStateOf(false) }
+            Box {
+                TextButton(onClick = { labelMenu = true }, enabled = frames == null) {
+                    Text(stringResource(R.string.debug_training_label, state.trainingLabel ?: stringResource(R.string.debug_label_none)))
+                }
+                DropdownMenu(expanded = labelMenu, onDismissRequest = { labelMenu = false }) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.debug_label_none)) },
+                        onClick = {
+                            labelMenu = false
+                            viewModel.setTrainingLabel(null)
+                        },
+                    )
+                    TRAINING_LABELS.forEach { label ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                labelMenu = false
+                                viewModel.setTrainingLabel(label)
+                            },
+                        )
+                    }
+                }
+            }
             OutlinedButton(onClick = viewModel::toggleRecording) {
                 Text(
                     if (frames == null) {

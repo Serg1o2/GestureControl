@@ -59,7 +59,7 @@ class HandAnalyzer(
                 val bitmap = toUserView(proxy)
                 val landmarks = landmarker.detect(bitmap, timestampMs)
                 throttler.onProcessed(timestampMs, landmarks != null)
-                val frame = HandFrame(timestampMs, landmarks)
+                val frame = HandFrame(timestampMs, landmarks, bitmap.width.toFloat() / bitmap.height)
                 val event = gestureEngine.process(frame)
                 val pointer = pointerEngine?.process(frame)
                 onResult(
@@ -68,7 +68,7 @@ class HandAnalyzer(
                         landmarks = gestureEngine.smoothedLandmarks,
                         state = gestureEngine.state,
                         event = event,
-                        aspectRatio = bitmap.width.toFloat() / bitmap.height,
+                        aspectRatio = frame.aspect,
                         fps = fps,
                         powerSaving = throttler.isIdle,
                         pointer = pointer,
