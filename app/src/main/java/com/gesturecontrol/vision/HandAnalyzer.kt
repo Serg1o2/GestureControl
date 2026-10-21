@@ -10,6 +10,7 @@ import com.gesturecontrol.gestures.GestureEngine
 import com.gesturecontrol.gestures.GestureEvent
 import com.gesturecontrol.gestures.HandFrame
 import com.gesturecontrol.gestures.Landmark
+import com.gesturecontrol.gestures.PowerSaveThrottler
 
 /** Result of analyzing one camera frame. */
 data class AnalysisResult(
@@ -21,6 +22,8 @@ data class AnalysisResult(
     /** Width / height of the analyzed (rotated) image, for drawing overlays. */
     val aspectRatio: Float,
     val fps: Float,
+    /** True while analysis runs at the reduced idle frame rate. */
+    val powerSaving: Boolean,
 )
 
 /**
@@ -30,6 +33,7 @@ data class AnalysisResult(
 class HandAnalyzer(
     private val landmarker: HandLandmarkerEngine,
     private val gestureEngine: GestureEngine,
+    private val throttler: PowerSaveThrottler,
     private val mirror: Boolean = true,
     private val onResult: (AnalysisResult) -> Unit,
 ) : ImageAnalysis.Analyzer {
@@ -40,14 +44,16 @@ class HandAnalyzer(
     override fun analyze(image: ImageProxy) {
         image.use { proxy ->
             val timestampMs = proxy.imageInfo.timestamp / 1_000_000
-            if (timestampMs <= lastTimestampMs) return
+            // Skipped frames are closed right away and cost no inference.
+            if (timestampMs <= lastTimestampMs || !throttler.shouldProcess(timestampMs)) return
             val dt = timestampMs - lastTimestampMs
             lastTimestampMs = timestampMs
-            if (dt in 1..2000) fps = fps * 0.9f + (1000f / dt) * 0.1f
+            if (dt in 1..2000) fps = fps * 0.8f + (1000f / dt) * 0.2f
 
             try {
                 val bitmap = toUserView(proxy)
                 val landmarks = landmarker.detect(bitmap, timestampMs)
+                throttler.onProcessed(timestampMs, landmarks != null)
                 val frame = HandFrame(timestampMs, landmarks)
                 val event = gestureEngine.process(frame)
                 onResult(
@@ -58,6 +64,7 @@ class HandAnalyzer(
                         event = event,
                         aspectRatio = bitmap.width.toFloat() / bitmap.height,
                         fps = fps,
+                        powerSaving = throttler.isIdle,
                     ),
                 )
                 bitmap.recycle()

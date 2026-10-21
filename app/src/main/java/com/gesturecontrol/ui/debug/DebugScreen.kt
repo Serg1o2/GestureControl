@@ -95,7 +95,10 @@ private fun DebugContent(viewModel: DebugViewModel) {
         }
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.debug_state, state.engineState.label()), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.debug_fps, state.fps))
+            Text(
+                stringResource(R.string.debug_fps, state.fps) +
+                    if (state.powerSaving) " · " + stringResource(R.string.debug_power_save_on) else "",
+            )
             Text(stringResource(R.string.debug_last_gesture, state.lastGesture?.label() ?: stringResource(R.string.debug_none)))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = state.executeActions, onCheckedChange = viewModel::setExecuteActions)

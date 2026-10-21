@@ -12,6 +12,10 @@ import com.gesturecontrol.gestures.Gesture
 import com.gesturecontrol.gestures.GestureConfig
 import com.gesturecontrol.gestures.GestureEngine
 import com.gesturecontrol.gestures.Landmark
+import com.gesturecontrol.gestures.PowerSaveConfig
+import com.gesturecontrol.gestures.PowerSaveThrottler
+import com.gesturecontrol.data.SettingsRepository
+import kotlinx.coroutines.flow.first
 import com.gesturecontrol.vision.AnalysisResult
 import com.gesturecontrol.vision.HandAnalyzer
 import com.gesturecontrol.vision.HandLandmarkerEngine
@@ -32,6 +36,7 @@ data class DebugUiState(
     val aspectRatio: Float = 3f / 4f,
     val engineState: EngineState = EngineState.NoHand,
     val fps: Float = 0f,
+    val powerSaving: Boolean = false,
     val lastGesture: Gesture? = null,
     val executeActions: Boolean = false,
     val recordingFrames: Int? = null,
@@ -42,6 +47,7 @@ data class DebugUiState(
 class DebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val actionDispatcher: ActionDispatcher,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DebugUiState())
@@ -57,7 +63,8 @@ class DebugViewModel @Inject constructor(
         viewModelScope.launch {
             val engine = landmarker ?: withContext(Dispatchers.Default) { HandLandmarkerEngine(context) }
                 .also { landmarker = it }
-            val analyzer = HandAnalyzer(engine, GestureEngine(GestureConfig()), onResult = ::onResult)
+            val throttler = PowerSaveThrottler(PowerSaveConfig(enabled = settings.powerSaveEnabled.first()))
+            val analyzer = HandAnalyzer(engine, GestureEngine(GestureConfig()), throttler, onResult = ::onResult)
             camera.bind(owner, analyzer, rotation, surfaceProvider)
         }
     }
@@ -83,6 +90,7 @@ class DebugViewModel @Inject constructor(
                 aspectRatio = result.aspectRatio,
                 engineState = result.state,
                 fps = result.fps,
+                powerSaving = result.powerSaving,
                 lastGesture = result.event?.gesture ?: it.lastGesture,
             )
         }
