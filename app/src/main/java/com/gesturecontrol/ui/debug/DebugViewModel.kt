@@ -15,6 +15,7 @@ import com.gesturecontrol.gestures.Landmark
 import com.gesturecontrol.gestures.PowerSaveConfig
 import com.gesturecontrol.gestures.PowerSaveThrottler
 import com.gesturecontrol.data.SettingsRepository
+import com.gesturecontrol.service.GestureServiceState
 import kotlinx.coroutines.flow.first
 import com.gesturecontrol.vision.AnalysisResult
 import com.gesturecontrol.vision.HandAnalyzer
@@ -48,6 +49,7 @@ class DebugViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val actionDispatcher: ActionDispatcher,
     private val settings: SettingsRepository,
+    private val serviceState: GestureServiceState,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(DebugUiState())
@@ -60,6 +62,8 @@ class DebugViewModel @Inject constructor(
     private var recorder: LandmarkRecorder? = null
 
     fun startCamera(owner: LifecycleOwner, surfaceProvider: Preview.SurfaceProvider, rotation: Int) {
+        // Ask the background service to release the camera while this screen uses it.
+        serviceState.debugPreviewActive.value = true
         viewModelScope.launch {
             val engine = landmarker ?: withContext(Dispatchers.Default) { HandLandmarkerEngine(context) }
                 .also { landmarker = it }
@@ -72,6 +76,7 @@ class DebugViewModel @Inject constructor(
     fun stopCamera() {
         camera.unbind()
         stopRecording()
+        serviceState.debugPreviewActive.value = false
     }
 
     fun setExecuteActions(enabled: Boolean) = _state.update { it.copy(executeActions = enabled) }

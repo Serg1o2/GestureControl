@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">GestureControl</string>
+    <string name="app_name" translatable="false">GestureControl</string>
     <string name="nav_back">Back</string>
 
     <!-- Main screen -->
     <string name="main_toggle_label">Gesture control</string>
-    <string name="main_toggle_on">Works in the selected apps</string>
     <string name="main_toggle_off">Off</string>
     <string name="main_setup_section">Setup</string>
     <string name="perm_camera">Camera</string>
@@ -63,7 +62,7 @@
     <string name="debug_none">—</string>
     <string name="debug_execute_actions">Execute actions</string>
     <string name="debug_record_start">Record landmarks</string>
-    <string name="debug_record_stop">Stop recording (%1$d frames)</string>
+    <string name="debug_record_stop">Stop recording · frames: %1$d</string>
     <string name="debug_record_saved">Saved: %1$s</string>
 
     <!-- Engine states and gestures -->
