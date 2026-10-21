@@ -51,6 +51,7 @@ fun MainScreen(
     onOpenAccessibilityDisclosure: () -> Unit,
     onOpenZones: () -> Unit,
     onOpenCursorSettings: () -> Unit,
+    onOpenCustom: () -> Unit,
     viewModel: MainViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -189,6 +190,7 @@ fun MainScreen(
                 Switch(checked = state.classifier == ClassifierKind.MODEL, onCheckedChange = viewModel::setUseModel)
             }
 
+            OutlinedButton(onClick = onOpenCustom) { Text(stringResource(R.string.main_custom_open)) }
             OutlinedButton(onClick = onOpenDebug) { Text(stringResource(R.string.main_debug_open)) }
 
             Text(
