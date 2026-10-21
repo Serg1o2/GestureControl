@@ -1,0 +1,8 @@
+# Data and environments are never committed; only scripts, configs and small reports.
+data/
+.venv-*/
+artifacts/**/*.keras
+artifacts/**/*_float.tflite
+__pycache__/
+*.pyc
+artifacts/*pilot*/

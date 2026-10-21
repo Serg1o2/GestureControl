@@ -1,0 +1,6 @@
+# Landmark extraction. MediaPipe version must match the app (com.google.mediapipe:tasks-vision 0.10.20).
+mediapipe==0.10.20
+numpy>=1.26,<2.0
+opencv-python-headless>=4.9,<5
+remotezip==0.12.3
+gdown>=5.2,<6

@@ -1,0 +1,3 @@
+# Training and TFLite export (CPU is enough: the models are tiny).
+tensorflow==2.19.0
+numpy>=1.26,<2.0
