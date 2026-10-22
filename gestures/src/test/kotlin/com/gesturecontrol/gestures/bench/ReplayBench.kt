@@ -91,8 +91,20 @@ val configs: Map<String, Pair<GestureConfig, PointerConfig>> by lazy {
     )
     val pinch = basePointer.copy(pinchArmMs = 250, pinchMinClosedFrames = 2)
     val scrollHands = basePointer.scroll.copy(inHandSizes = true, minDistance = 0.8f, minVelocity = 2.7f, minFrames = 3)
+    // Behaviour before docs/phantoms.md: every protection off. The baseline for comparisons.
+    val off = StabilityConfig(maxJumpHandSizes = 0f)
+    val unprotected = base.copy(
+        stability = off,
+        swipe = base.swipe.copy(minFrames = 2),
+        fingerSwipe = base.fingerSwipe.copy(minFrames = 2),
+    ) to basePointer.copy(
+        stability = off,
+        pinchMaxClosingMs = 0,
+        scroll = basePointer.scroll.copy(minFrames = 2, confirmMs = 0),
+    )
     linkedMapOf(
         "default" to (base to basePointer),
+        "unprotected" to unprotected,
         "jump" to (base.copy(stability = jump) to basePointer.copy(stability = jump)),
         "jump_settle" to (base.copy(stability = jumpSettle) to basePointer.copy(stability = jumpSettle)),
         "frames3" to (frames3 to basePointer.copy(scroll = basePointer.scroll.copy(minFrames = 3))),
