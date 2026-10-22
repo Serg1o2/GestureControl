@@ -43,6 +43,8 @@ sealed interface EngineState {
  *   it latches the palm so that keeping the palm open does not also fire the palm hold.
  * - Cooldown: after any event nothing fires for [GestureConfig.cooldownMs];
  *   the opposite swipe is suppressed for [SwipeConfig.oppositeSuppressMs].
+ * - Stability ([StabilityConfig]): a palm jump between detections restarts tracking as for a new
+ *   hand, and nothing fires during the settle time after the hand appears.
  */
 class GestureEngine(
     private val config: GestureConfig = GestureConfig(),
@@ -58,7 +60,7 @@ class GestureEngine(
     @Volatile
     var fingerSwipesEnabled: Boolean = true
 
-    private var lastHandTs: Long? = null
+    private val guard = TrackingGuard(config.stability, config.handLostToleranceMs)
     private var cooldownUntil = Long.MIN_VALUE
     private var lastSwipe: SwipeDirection? = null
     private var lastSwipeTs = Long.MIN_VALUE
@@ -84,21 +86,22 @@ class GestureEngine(
         val t = frame.timestampMs
         val raw = frame.landmarks
         if (raw == null) {
-            val lastSeen = lastHandTs
-            if (lastSeen == null || t - lastSeen > config.handLostToleranceMs) {
+            if (guard.onNoHand(t)) {
                 resetTracking()
                 state = EngineState.NoHand
             }
             return null
         }
 
-        val lastSeen = lastHandTs
-        if (lastSeen != null && t - lastSeen > config.handLostToleranceMs) resetTracking()
-        lastHandTs = t
+        if (guard.onHand(t, raw, frame.aspect)) resetTracking()
 
         val lm = smoother.smooth(raw, t)
         smoothedLandmarks = lm
 
+        val swipeScale = if (config.swipe.inHandSizes) isotropicHandSize(lm, frame.aspect) else 1f
+        val fingerScale = if (config.fingerSwipe.inHandSizes) isotropicHandSize(lm, frame.aspect) else 1f
+        val swipeX = if (config.swipe.inHandSizes) frame.aspect else 1f
+        val fingerX = if (config.fingerSwipe.inHandSizes) frame.aspect else 1f
         val (sx, sy) = lm.centroid(config.swipe.trackedPoint.indices)
         val (px, py) = lm.centroid(TrackedPoint.PALM_CENTER.indices)
         palmTrajectory.add(t, px, py)
@@ -110,6 +113,16 @@ class GestureEngine(
 
         updatePalmLatch(t, isPalm)
         val fistOpened = updateFist(t, pose)
+
+        if (!guard.settled(t)) {
+            // A hand that has just appeared: its entering motion must not become a swipe or a hold.
+            swipeDetector.reset()
+            fingerDetector.reset()
+            resetPalmHold()
+            fistStartTs = null
+            state = EngineState.Tracking
+            return null
+        }
 
         if (t < cooldownUntil) {
             // Only fresh motion after the cooldown may produce the next swipe.
@@ -129,7 +142,7 @@ class GestureEngine(
         if (pose == HandPose.POINTING && fingerSwipesEnabled) {
             swipeDetector.reset()
             val tip = lm[HandLandmarks.INDEX_TIP]
-            fingerDetector.update(t, tip.x, tip.y)?.let { dir ->
+            fingerDetector.update(t, tip.x * fingerX, tip.y, fingerScale)?.let { dir ->
                 val suppressed = lastFinger != null && dir != lastFinger &&
                     t - lastFingerTs < config.fingerSwipe.oppositeSuppressMs
                 if (!suppressed) {
@@ -147,7 +160,8 @@ class GestureEngine(
             return updatePalmHold(t, good = false)
         }
 
-        swipeDetector.update(t, sx, sy)?.let { dir ->
+        val swipePose = config.swipe.poses.isEmpty() || pose in config.swipe.poses
+        swipeDetector.update(t, sx * swipeX, sy, swipeScale, swipePose)?.let { dir ->
             val suppressed = lastSwipe != null && dir != lastSwipe &&
                 t - lastSwipeTs < config.swipe.oppositeSuppressMs
             if (!suppressed) {
@@ -164,7 +178,7 @@ class GestureEngine(
 
     fun reset() {
         resetTracking()
-        lastHandTs = null
+        guard.reset()
         cooldownUntil = Long.MIN_VALUE
         lastSwipe = null
         lastSwipeTs = Long.MIN_VALUE
@@ -259,3 +273,4 @@ class GestureEngine(
         smoothedLandmarks = null
     }
 }
+

@@ -1,6 +1,7 @@
 package com.gesturecontrol.gestures.pointer
 
 import com.gesturecontrol.gestures.FilterConfig
+import com.gesturecontrol.gestures.StabilityConfig
 
 /** How a "press" is triggered in cursor mode. */
 enum class PressMode {
@@ -31,6 +32,19 @@ data class PointerConfig(
     val pinchOpen: Float = 0.45f,
     /** The pinch must stay closed this long to count. */
     val pinchMinClosedMs: Long = 40,
+    /** ...and on at least this many consecutive frames (one noisy frame is not a pinch). */
+    val pinchMinClosedFrames: Int = 1,
+    /**
+     * The cursor (pointing pose) must have been shown this long before a pinch can press:
+     * a relaxed hand passing through a pointing-like pose does not press. 0 disables.
+     */
+    val pinchArmMs: Long = 0,
+    /**
+     * A press needs a closing motion: the pinch must close within this time after the fingers were
+     * last open (ratio above [pinchOpen]). A relaxed hand whose thumb and index already touch never
+     * presses. 0 disables.
+     */
+    val pinchMaxClosingMs: Long = 0,
     /**
      * Index tip must be at least this far from the wrist (in hand sizes) for a pinch.
      * Rejects a fist, where thumb and index tips are also close.
@@ -44,6 +58,8 @@ data class PointerConfig(
     val pressCooldownMs: Long = 400,
 
     val scroll: ScrollConfig = ScrollConfig(),
+    /** Tracking restarts on palm jumps; no press or scroll during the settle time (see [StabilityConfig]). */
+    val stability: StabilityConfig = StabilityConfig(),
 )
 
 /** Two-finger vertical scroll, measured on the midpoint of the index and middle fingertips. */
@@ -56,4 +72,14 @@ data class ScrollConfig(
     val cooldownMs: Long = 350,
     /** Moving the hand back is ignored for this long after a scroll. */
     val oppositeSuppressMs: Long = 600,
+    /** A stroke must be seen on at least this many frames (start and end included). */
+    val minFrames: Int = 2,
+    /**
+     * A stroke is reported only after it has held for this long without coming back by more than
+     * [maxReturnShare] of its length: a two-finger tap (down and back up) is not a scroll. 0 = immediate.
+     */
+    val confirmMs: Long = 0,
+    val maxReturnShare: Float = 0.5f,
+    /** When true, [minDistance] and [minVelocity] are in hand sizes instead of frame heights. */
+    val inHandSizes: Boolean = false,
 )

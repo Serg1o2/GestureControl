@@ -20,6 +20,25 @@ data class GestureConfig(
     val cooldownMs: Long = 600,
     /** Hand absence shorter than this is treated as a detector dropout, not as the hand leaving. */
     val handLostToleranceMs: Long = 150,
+    val stability: StabilityConfig = StabilityConfig(),
+)
+
+/**
+ * Protection against phantom gestures from tracking glitches (see docs/phantoms.md):
+ * the detector switching to the other hand, a hand entering the frame, noisy low-light frames.
+ */
+data class StabilityConfig(
+    /**
+     * A palm jump between consecutive detections larger than this (in hand sizes, isotropic)
+     * means the tracker lost the hand or switched to another one: tracking restarts as for a new hand.
+     * 0 disables the check.
+     */
+    val maxJumpHandSizes: Float = 0f,
+    /**
+     * After the hand appears (or tracking restarts) nothing fires for this long and swipes start
+     * from scratch, so the motion of a hand entering the frame is not a swipe. 0 disables.
+     */
+    val settleMs: Long = 0,
 )
 
 /** One Euro filter parameters (see https://gery.casiez.net/1euro/). */
@@ -61,6 +80,20 @@ data class SwipeConfig(
      * so that bringing the hand back does not trigger the reverse action.
      */
     val oppositeSuppressMs: Long = 900,
+    /** A swipe must be seen on at least this many frames (start and end included): rejects one-frame jumps. */
+    val minFrames: Int = 2,
+    /**
+     * Poses a palm swipe is made with; empty = any pose except the pointer poses.
+     * Casual hand motion (pointing around, gesturing while talking) is mostly in undefined poses.
+     */
+    val poses: Set<HandPose> = emptySet(),
+    /** Share of the swipe's frames that must show one of [poses]. */
+    val minPoseShare: Float = 0.6f,
+    /**
+     * When true, [minDistance] and [minVelocity] are in hand sizes (wrist to middle MCP, isotropic)
+     * instead of frame widths: the same motion counts at any distance and in any frame orientation.
+     */
+    val inHandSizes: Boolean = false,
 )
 
 /** Fist that opens into a palm. */

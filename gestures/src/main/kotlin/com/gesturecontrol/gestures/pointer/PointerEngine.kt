@@ -6,7 +6,9 @@ import com.gesturecontrol.gestures.HandPose
 import com.gesturecontrol.gestures.Landmark
 import com.gesturecontrol.gestures.PalmConfig
 import com.gesturecontrol.gestures.StaticGestureClassifier
+import com.gesturecontrol.gestures.TrackingGuard
 import com.gesturecontrol.gestures.distance2d
+import com.gesturecontrol.gestures.isotropicHandSize
 import com.gesturecontrol.gestures.mapping.NormPoint
 import com.gesturecontrol.gestures.mapping.ScreenMapper
 import com.gesturecontrol.gestures.mapping.VerticalDirection
@@ -47,6 +49,7 @@ data class PointerOutput(
  *   press lands where the cursor was just before, so the finger motion of the pinch does not move it.
  * - DWELL mode: holding the cursor inside a zone for [PointerConfig.dwellMs] presses that zone.
  * - TWO_FINGERS pose hides the cursor; vertical strokes emit scroll steps.
+ * - Stability: a palm jump restarts tracking, and nothing presses or scrolls during the settle time.
  * Depth (z) is never used.
  */
 class PointerEngine(
@@ -72,15 +75,20 @@ class PointerEngine(
     private val smoother = CursorSmoother(config.filter, config.deadZone, screenAspect)
     private val scroll = ScrollDetector(config.scroll)
     private val history = ArrayDeque<Pair<Long, NormPoint>>()
+    private val guard = TrackingGuard(config.stability, config.handLostToleranceMs)
 
     private var lastHandTs: Long? = null
     private var cursorActive = false
+    private var cursorSinceTs = Long.MIN_VALUE / 2
     private var lastPointerTs = Long.MIN_VALUE / 2
     private var cursor: NormPoint? = null
     private var lastPressTs = Long.MIN_VALUE / 2
 
     private var pinchOnsetTs: Long? = null
     private var pinchClosedSince: Long? = null
+    private var pinchClosedFrames = 0
+    /** Last time the thumb and index were open (ratio above pinchOpen) while the cursor was shown. */
+    private var pinchLastOpenTs = Long.MIN_VALUE / 2
     private var pinchFired = false
     private var frozenCursor: NormPoint? = null
 
@@ -95,22 +103,27 @@ class PointerEngine(
         }
         val t = frame.timestampMs
         val lm = frame.landmarks
-        val lastSeen = lastHandTs
         if (lm == null) {
-            if (lastSeen == null || t - lastSeen > config.handLostToleranceMs) reset()
+            if (guard.onNoHand(t)) resetTracking()
             return if (cursorActive) output(null, null, null) else PointerOutput.HIDDEN
         }
-        if (lastSeen != null && t - lastSeen > config.handLostToleranceMs) reset()
+        if (guard.onHand(t, lm, frame.aspect)) resetTracking()
         lastHandTs = t
+        val settled = guard.settled(t)
 
         val pose = poseClassifier.classify(lm, frame.aspect).pose
         val ratio = StaticGestureClassifier.pinchRatio(lm)
 
         if (pose == HandPose.TWO_FINGERS) {
             hideCursor()
+            if (!settled) {
+                scroll.resetStroke()
+                return PointerOutput(null, pose, ratio, false, null, 0f, null)
+            }
             val tipA = lm[H.INDEX_TIP]
             val tipB = lm[H.MIDDLE_TIP]
-            val direction = scroll.update(t, (tipA.x + tipB.x) / 2, (tipA.y + tipB.y) / 2)
+            val scale = if (config.scroll.inHandSizes) isotropicHandSize(lm, frame.aspect) else 1f
+            val direction = scroll.update(t, (tipA.x + tipB.x) / 2, (tipA.y + tipB.y) / 2, scale)
             return PointerOutput(null, pose, ratio, false, null, 0f, direction?.let { PointerEvent.Scroll(it) })
         }
         scroll.resetStroke()
@@ -120,6 +133,7 @@ class PointerEngine(
         val keepAlive = pose == HandPose.POINTING || (cursorActive && pinchCandidate)
         if (keepAlive) {
             lastPointerTs = t
+            if (!cursorActive) cursorSinceTs = t
             cursorActive = true
         } else if (cursorActive && t - lastPointerTs > config.cursorHideDelayMs) {
             hideCursor()
@@ -135,16 +149,23 @@ class PointerEngine(
             while (t - history.first().first > HISTORY_MS) history.removeFirst()
         }
 
+        // A press needs settled tracking and a cursor shown for the arming time.
+        val armed = settled && t - cursorSinceTs >= config.pinchArmMs
         val event = when (config.pressMode) {
-            PressMode.PINCH -> updatePinch(t, pinchCandidate, ratio)
+            PressMode.PINCH -> updatePinch(t, pinchCandidate && armed, ratio)
             PressMode.DWELL -> null
         }
         val display = frozenCursor ?: cursor
-        val dwellEvent = if (config.pressMode == PressMode.DWELL && display != null) updateDwell(t, display) else null
+        val dwellEvent = if (config.pressMode == PressMode.DWELL && display != null && settled) updateDwell(t, display) else null
         return output(pose, ratio, event ?: dwellEvent)
     }
 
     fun reset() {
+        resetTracking()
+        guard.reset()
+    }
+
+    private fun resetTracking() {
         hideCursor()
         lastHandTs = null
         scroll.resetStroke()
@@ -152,6 +173,7 @@ class PointerEngine(
     }
 
     private fun updatePinch(t: Long, candidate: Boolean, ratio: Float): PointerEvent? {
+        if (ratio >= config.pinchOpen) pinchLastOpenTs = t
         if (!candidate) {
             resetPinch()
             return null
@@ -162,10 +184,20 @@ class PointerEngine(
         }
         if (ratio >= config.pinchClose) {
             pinchClosedSince = null
+            pinchClosedFrames = 0
             return null
         }
         val since = pinchClosedSince ?: t.also { pinchClosedSince = it }
-        if (pinchFired || t - since < config.pinchMinClosedMs || t - lastPressTs < config.pressCooldownMs) return null
+        pinchClosedFrames++
+        if (pinchFired || t - since < config.pinchMinClosedMs || pinchClosedFrames < config.pinchMinClosedFrames ||
+            t - lastPressTs < config.pressCooldownMs
+        ) {
+            return null
+        }
+        if (config.pinchMaxClosingMs > 0 && since - pinchLastOpenTs > config.pinchMaxClosingMs) {
+            pinchFired = true // closed too slowly or was never open: wait for the fingers to open again
+            return null
+        }
         pinchFired = true
         lastPressTs = t
         val at = frozenCursor ?: cursor ?: return null
@@ -223,6 +255,7 @@ class PointerEngine(
     }
 
     private fun hideCursor() {
+        pinchLastOpenTs = Long.MIN_VALUE / 2
         cursorActive = false
         cursor = null
         smoother.reset()
@@ -234,6 +267,7 @@ class PointerEngine(
     private fun resetPinch() {
         pinchOnsetTs = null
         pinchClosedSince = null
+        pinchClosedFrames = 0
         pinchFired = false
         frozenCursor = null
     }
