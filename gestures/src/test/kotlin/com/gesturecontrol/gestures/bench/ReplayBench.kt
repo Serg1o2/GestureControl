@@ -9,7 +9,9 @@ import com.gesturecontrol.gestures.Landmark
 import com.gesturecontrol.gestures.LandmarkCsv
 import com.gesturecontrol.gestures.Sensitivity
 import com.gesturecontrol.gestures.SensitivityMapping
+import com.gesturecontrol.gestures.GestureToggles
 import com.gesturecontrol.gestures.StabilityConfig
+import com.gesturecontrol.gestures.VolumeSliderConfig
 import com.gesturecontrol.gestures.ml.DenseMlp
 import com.gesturecontrol.gestures.ml.PoseClassifier
 import com.gesturecontrol.gestures.ml.RuleBasedPoseClassifier
@@ -159,6 +161,26 @@ val configs: Map<String, Pair<GestureConfig, PointerConfig>> by lazy {
             val sens = Sensitivity(level, level, level, level, level, level, level)
             "sens$level" to (SensitivityMapping.apply(base, sens) to SensitivityMapping.apply(basePointer, sens))
         }.toTypedArray(),
+        // Volume slider tuning (gesture mode only; the pointer side is the default).
+        *listOf(
+            "vol_closing" to VolumeSliderConfig(maxClosingMs = 400),
+            "vol_closing300" to VolumeSliderConfig(maxClosingMs = 300),
+            "vol_closing_arm400" to VolumeSliderConfig(maxClosingMs = 400, armMs = 400),
+            "vol_closing_dz30" to VolumeSliderConfig(maxClosingMs = 400, deadZoneHandSizes = 0.3f),
+            "vol_tight" to VolumeSliderConfig(maxClosingMs = 400, pinchClose = 0.22f, pinchOpen = 0.40f),
+            "vol_strict" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f),
+            "vol_strict_speed" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f, maxSpeed = 2f),
+            "vol_strict_speed_confirm" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f, maxSpeed = 2f, stepConfirmMs = 150),
+            "vol_strict_speed15_confirm" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f, maxSpeed = 1.5f, stepConfirmMs = 150),
+            "vol_strict_speed_confirm250" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f, maxSpeed = 2f, stepConfirmMs = 250),
+            "vol_strict_speed15_confirm250" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f, maxSpeed = 1.5f, stepConfirmMs = 250),
+            "vol_default" to VolumeSliderConfig(),
+            "vol_speed25" to VolumeSliderConfig(maxSpeed = 2.5f),
+            "vol_speed2" to VolumeSliderConfig(maxSpeed = 2f),
+            "vol_off" to VolumeSliderConfig(),
+        ).map { (name, v) ->
+            name to ((if (name == "vol_off") GestureToggles(volume = false).applyTo(base) else base.copy(volume = v)) to basePointer)
+        }.toTypedArray(),
         "all" to (
             hands.copy(
                 stability = jumpSettle,
@@ -262,6 +284,9 @@ private fun replay(video: Video, fps: Int, classifierName: String, config: Pair<
         val seg = attribute(video.segments, e.timestampMs) ?: continue
         fired.getOrPut(seg) { mutableListOf() } += e.gesture
         if (seg.isIdle && dump) System.err.println("PHANTOM ${video.name} ${seg.label} ${e.gesture} ${context(frames, e.timestampMs)}")
+        if (seg.isIdle && dump && (e.gesture == Gesture.VOLUME_UP || e.gesture == Gesture.VOLUME_DOWN)) {
+            System.err.println("VOLDIAG ${video.name} ${seg.label} ${e.gesture} ${volumeContext(frames, e.timestampMs)}")
+        }
         if (seg.isIdle) {
             r.phantomGestures++
             r.phantomByGesture.merge(e.gesture.name, 1, Int::plus)
@@ -347,6 +372,24 @@ private fun lastSeenBefore(frames: List<HandFrame>, i: Int): Long =
 private fun palm(lm: List<Landmark>, aspect: Float): Pair<Float, Float> {
     val idx = intArrayOf(0, 5, 9, 13, 17)
     return idx.map { lm[it].x * aspect }.average().toFloat() to idx.map { lm[it].y }.average().toFloat()
+}
+
+/**
+ * Context of a volume step: vertical palm speed over the last 200 ms (hand sizes / s), pinch ratio now,
+ * whether the hand is lost within the next second, and the time until the pinch opens.
+ */
+private fun volumeContext(frames: List<HandFrame>, t: Long): String {
+    val idx = frames.indexOfLast { it.timestampMs <= t }
+    val now = frames[idx].landmarks ?: return "nohand"
+    val aspect = frames[idx].aspect
+    val size = hypot((now[9].x - now[0].x) * aspect, now[9].y - now[0].y).coerceAtLeast(1e-6f)
+    val past = frames.subList(0, idx + 1).lastOrNull { t - it.timestampMs >= 200 && it.landmarks != null }
+    val speed = past?.landmarks?.let { p -> (palm(now, aspect).second - palm(p, aspect).second) / size / ((t - past.timestampMs) / 1000f) } ?: 0f
+    val future = frames.subList(idx, frames.size).takeWhile { it.timestampMs - t <= 1000 }
+    val lost = future.count { it.landmarks == null }
+    val ratio = com.gesturecontrol.gestures.PinchGeometry.ratio(now)
+    val reach = com.gesturecontrol.gestures.PinchGeometry.indexReach(now)
+    return "vy=${"%.2f".format(Locale.US, speed)} ratio=${"%.2f".format(Locale.US, ratio)} reach=${"%.2f".format(Locale.US, reach)} lostNext1s=$lost"
 }
 
 /** Gesture segments own events up to [LATE_MS] after their end. */

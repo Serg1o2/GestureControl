@@ -144,7 +144,8 @@ class GestureEngine(
             volumeSlider.reset()
         } else if (volumeSlider.isActive || t >= cooldownUntil) {
             val step = volumeSlider.update(t, lm, frame.aspect)
-            if (volumeSlider.isActive) {
+            // Until its first step an armed slider leaves the other gestures alone (a swipe resets it in fire()).
+            if (volumeSlider.isActive && volumeSlider.hasStepped) {
                 suppressOtherGestures()
                 state = EngineState.VolumeSliding(volumeSlider.steps)
                 return step?.let { GestureEvent(if (it == VolumeSlider.Step.UP) Gesture.VOLUME_UP else Gesture.VOLUME_DOWN, t) }
@@ -282,6 +283,7 @@ class GestureEngine(
     }
 
     private fun fire(gesture: Gesture, t: Long): GestureEvent {
+        volumeSlider.reset()
         cooldownUntil = t + config.cooldownMs
         swipeDetector.reset()
         fingerDetector.reset()
