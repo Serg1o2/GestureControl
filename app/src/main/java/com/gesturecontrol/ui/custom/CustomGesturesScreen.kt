@@ -24,7 +24,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,6 +38,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gesturecontrol.R
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.Icons
+import com.gesturecontrol.ui.components.AppTopBar
 import com.gesturecontrol.data.GLOBAL_PROFILE
 import com.gesturecontrol.gestures.custom.ActionSpec
 
@@ -87,12 +91,12 @@ fun CustomGesturesScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.custom_title)) },
-                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.nav_back)) } },
+            AppTopBar(
+                title = stringResource(R.string.custom_title),
+                onBack = onBack,
                 actions = {
                     Box {
-                        TextButton(onClick = { menu = true }) { Text("⋮") }
+                        IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, contentDescription = null) }
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                             DropdownMenuItem(text = { Text(stringResource(R.string.custom_duplicate)) }, onClick = {
                                 menu = false

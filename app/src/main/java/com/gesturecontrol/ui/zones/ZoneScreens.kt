@@ -24,7 +24,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gesturecontrol.R
+import com.gesturecontrol.ui.components.AppTopBar
 import com.gesturecontrol.gestures.mapping.NormPoint
 import com.gesturecontrol.gestures.mapping.NormRect
 import com.gesturecontrol.gestures.mapping.Zone
@@ -65,10 +65,7 @@ fun ZoneAppsScreen(
     val items by viewModel.items.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.zones_title)) },
-                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.nav_back)) } },
-            )
+            AppTopBar(stringResource(R.string.zones_title), onBack = onBack)
         },
     ) { padding ->
         val list = items
@@ -107,10 +104,7 @@ fun ZoneEditorScreen(onBack: () -> Unit, viewModel: ZoneEditorViewModel = hiltVi
     val selected = zones.firstOrNull { it.id == selectedId }
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(viewModel.appLabel) },
-                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.nav_back)) } },
-            )
+            AppTopBar(viewModel.appLabel, onBack = onBack)
         },
     ) { padding ->
         Column(

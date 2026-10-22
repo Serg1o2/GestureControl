@@ -5,8 +5,7 @@
 
     <!-- Main screen -->
     <string name="main_toggle_label">Gesture control</string>
-    <string name="main_toggle_off">Off</string>
-    <string name="main_setup_section">Setup</string>
+    <string name="main_setup_section">Before you start</string>
     <string name="perm_camera">Camera</string>
     <string name="perm_camera_desc">Needed to see your hand. Video never leaves the device.</string>
     <string name="perm_notifications">Notifications</string>
@@ -23,11 +22,6 @@
     <string name="main_apps_choose">Choose apps</string>
     <string name="main_apps_none_hint">Choose at least one app where gestures will work</string>
     <string name="main_gestures_section">Gestures</string>
-    <string name="gesture_swipe_right_desc">Swipe right → next track</string>
-    <string name="gesture_swipe_left_desc">Swipe left → previous track</string>
-    <string name="gesture_palm_desc">Open palm, hold 0.5 s → play / pause</string>
-    <string name="gesture_fist_open_desc">Fist opens into a palm → play / pause</string>
-    <string name="gesture_finger_desc">Index finger flick left / right → swipe left / right on the screen (switches tracks in the player). In apps with zones the finger drives the cursor instead.</string>
     <string name="power_save_title">Power saving</string>
     <string name="power_save_desc">Analyze 10 frames per second while no hand is visible</string>
     <string name="classifier_title">Pose recognition: trained model</string>
@@ -216,4 +210,37 @@
     <string name="gesture_finger_left">Finger left</string>
     <string name="gesture_finger_right">Finger right</string>
     <string name="gesture_fist_open">Fist opens</string>
+
+    <!-- Redesigned main screen and language -->
+    <string name="main_tagline">Control your phone with hand gestures</string>
+    <string name="main_hero_on_title">Gestures are on</string>
+    <string name="main_hero_off_title">Gestures are off</string>
+    <string name="main_hero_hint_ready">Turn on the switch to start</string>
+    <string name="main_hero_hint_missing">Finish the setup below first</string>
+    <string name="setup_progress">%1$d of %2$d</string>
+    <string name="main_apps_desc">Gestures work only in the apps you choose</string>
+    <string name="gesture_swipe_right_name">Swipe right</string>
+    <string name="gesture_swipe_left_name">Swipe left</string>
+    <string name="gesture_palm_name">Palm, 0.5 s</string>
+    <string name="gesture_fist_open_name">Open the fist</string>
+    <string name="gesture_finger_name">Index finger left / right</string>
+    <string name="action_next_track">Next track</string>
+    <string name="action_prev_track">Previous track</string>
+    <string name="action_play_pause">Pause / play</string>
+    <string name="action_screen_swipe">Swipe on the screen (switches tracks in players)</string>
+    <string name="gestures_finger_note">In apps with zones the index finger moves the cursor instead.</string>
+    <string name="main_zones_desc">Actions for areas of each app\'s screen</string>
+    <string name="cursor_settings_desc">Press mode, stability, calibration</string>
+    <string name="settings_section">Settings</string>
+    <string name="language_title">Language</string>
+    <string name="language_desc">Language of the app interface</string>
+    <string name="lang_ru" translatable="false">🇷🇺 Русский</string>
+    <string name="lang_en" translatable="false">🇬🇧 English</string>
+    <string name="tools_section">Tools</string>
+    <string name="main_custom_desc">Record your own gestures and assign actions</string>
+    <string name="main_debug_desc">Camera, hand landmarks, fps, brightness, recording</string>
+    <string name="version_label">Version %1$s</string>
+    <string name="setup_all_done">All set: everything is granted</string>
+    <string name="action_show">Show</string>
+    <string name="action_hide">Hide</string>
 </resources>

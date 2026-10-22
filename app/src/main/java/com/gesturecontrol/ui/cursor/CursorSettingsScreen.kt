@@ -22,7 +22,6 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -34,6 +33,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.gesturecontrol.R
+import com.gesturecontrol.ui.components.AppTopBar
 import com.gesturecontrol.data.PointerSettings
 import com.gesturecontrol.data.SettingsRepository
 import com.gesturecontrol.gestures.pointer.PressMode
@@ -77,10 +77,7 @@ fun CursorSettingsScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.cursor_settings_title)) },
-                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.nav_back)) } },
-            )
+            AppTopBar(stringResource(R.string.cursor_settings_title), onBack = onBack)
         },
     ) { padding ->
         Column(

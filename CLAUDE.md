@@ -15,6 +15,7 @@ GestureControl: Android app that controls the phone with hand gestures seen by t
 ./gradlew :gestures:test       # gesture logic unit tests (pure JVM, fast)
 ./gradlew :app:lintDebug       # Android lint; must have no errors
 ./gradlew installDebug         # install on a connected device
+./gradlew :app:recordPaparazziDebug   # JVM screenshots of the main screen (app/src/test/snapshots/images); verify: :app:verifyPaparazziDebug
 ./gradlew :gestures:replayBench -PbenchArgs="--split test --config default,proposed"   # phantom-event bench (needs ml/data/replay)
 ```
 
@@ -55,7 +56,9 @@ After each change: `assembleDebug` and `:gestures:test` must pass before committ
 - Android 14+: the camera FGS may only be started from a visible screen (`GestureService.start` from the main screen). The service is `START_NOT_STICKY` and never restarts itself from the background; it binds/unbinds the camera instead. In-app camera screens (debug, calibration) set `GestureServiceState.debugPreviewActive` so the service releases the camera.
 - Accessibility failures (cancelled/rejected gesture, secure window, locked screen) show a rate-limited hint next to the cursor; never crash.
 - Privacy: frames are never stored or sent. No network: `INTERNET`/`ACCESS_NETWORK_STATE` are removed in the manifest (MediaPipe adds them). The recorder writes landmark coordinates only. Keep `docs/privacy.md` and the disclosure screen in sync with any data or capability change.
-- Code comments in English. All UI strings in `res/values/strings.xml` (English, default) and `res/values-ru/strings.xml` (Russian).
+- Code comments in English. All UI strings in `res/values/strings.xml` (English) and `res/values-ru/strings.xml` (Russian); add both.
+- Interface language is chosen in the app (Russian by default, `ui/AppLanguage`), not taken from the system. Every component that shows text wraps its base context with `AppLanguage.wrap` (activity, Application, services, notifications); use those contexts, never a raw `createPackageContext`/system one.
+- UI: brand theme in `ui/theme` (no dynamic colour), shared pieces in `ui/components` (`AppTopBar` with a back arrow on every secondary screen, `SectionCard`, `SwitchRow`, `NavRow`, `StatusChip`). The main screen's layout is `MainContent` (stateless); after visual changes re-record the Paparazzi screenshots and look at them.
 - Never change `normalize.py` without the Kotlin twin, a new norm version and new parity vectors (`python -m gc_ml.export_vectors --what norm`).
 - Gesture tests: add real recordings to `gestures/src/test/resources/sequences/` with a `# expect: GESTURE,...` line; `RecordedSequenceTest` replays all of them.
 - Small commits with clear messages; commit only after build and tests are green.

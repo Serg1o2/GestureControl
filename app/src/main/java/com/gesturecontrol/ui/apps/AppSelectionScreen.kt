@@ -20,7 +20,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -32,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gesturecontrol.R
+import com.gesturecontrol.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,10 +39,7 @@ fun AppSelectionScreen(onBack: () -> Unit, viewModel: AppSelectionViewModel = hi
     val state by viewModel.state.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.apps_title)) },
-                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.nav_back)) } },
-            )
+            AppTopBar(stringResource(R.string.apps_title), onBack = onBack)
         },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {

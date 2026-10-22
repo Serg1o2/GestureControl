@@ -1,5 +1,6 @@
 package com.gesturecontrol.service
 
+import com.gesturecontrol.ui.AppLanguage
 import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
@@ -118,6 +119,8 @@ class GestureService : LifecycleService() {
         override fun onDisplayAdded(displayId: Int) = Unit
         override fun onDisplayRemoved(displayId: Int) = Unit
     }
+
+    override fun attachBaseContext(newBase: Context) = super.attachBaseContext(AppLanguage.wrap(newBase))
 
     override fun onCreate() {
         super.onCreate()

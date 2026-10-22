@@ -25,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gesturecontrol.R
+import com.gesturecontrol.ui.components.AppTopBar
 import com.gesturecontrol.gestures.custom.ActionSpec
 import com.gesturecontrol.ui.label
 import com.gesturecontrol.ui.rememberPermissionState
@@ -58,10 +58,7 @@ fun GestureEditorScreen(onDone: () -> Unit, viewModel: GestureEditorViewModel = 
     LaunchedEffect(state.saved) { if (state.saved) onDone() }
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.custom_editor_title)) },
-                navigationIcon = { TextButton(onClick = onDone) { Text(stringResource(R.string.nav_back)) } },
-            )
+            AppTopBar(stringResource(R.string.custom_editor_title), onBack = onDone)
         },
     ) { padding ->
         if (!camera.granted) {

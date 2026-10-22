@@ -1,5 +1,7 @@
 package com.gesturecontrol.accessibility
 
+import android.content.Context
+import com.gesturecontrol.ui.AppLanguage
 import android.accessibilityservice.AccessibilityService
 import android.content.ComponentName
 import android.content.pm.PackageManager
@@ -29,6 +31,8 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class ForegroundAppService : AccessibilityService() {
+    override fun attachBaseContext(newBase: Context) = super.attachBaseContext(AppLanguage.wrap(newBase))
+
 
     @Inject
     lateinit var tracker: ForegroundAppTracker

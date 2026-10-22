@@ -6,6 +6,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    // JVM screenshot tests of the Compose UI (no device): ./gradlew :app:recordPaparazziDebug
+    alias(libs.plugins.paparazzi)
 }
 
 android {

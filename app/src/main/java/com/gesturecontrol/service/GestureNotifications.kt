@@ -1,5 +1,6 @@
 package com.gesturecontrol.service
 
+import com.gesturecontrol.ui.AppLanguage
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -23,7 +24,9 @@ object GestureNotifications {
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
-    fun build(context: Context, statusText: String): Notification {
+    fun build(base: Context, statusText: String): Notification {
+        // Wrapped on every build: a language switch applies to the running service's notification too.
+        val context = AppLanguage.wrap(base)
         val openApp = PendingIntent.getActivity(
             context,
             0,
@@ -49,7 +52,9 @@ object GestureNotifications {
             .build()
     }
 
-    fun statusText(context: Context, status: ServiceStatus): String = when (status) {
+    fun statusText(base: Context, status: ServiceStatus): String = statusTextIn(AppLanguage.wrap(base), status)
+
+    private fun statusTextIn(context: Context, status: ServiceStatus): String = when (status) {
         ServiceStatus.Off -> context.getString(R.string.service_status_off)
         ServiceStatus.Waiting -> context.getString(R.string.service_status_waiting)
         is ServiceStatus.Active -> context.getString(R.string.service_status_active, status.appLabel)

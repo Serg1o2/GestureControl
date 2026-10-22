@@ -22,7 +22,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gesturecontrol.R
+import com.gesturecontrol.ui.components.AppTopBar
 import com.gesturecontrol.ui.label
 import com.gesturecontrol.ui.rememberPermissionState
 import com.gesturecontrol.vision.TRAINING_LABELS
@@ -52,10 +52,7 @@ fun DebugScreen(onBack: () -> Unit, viewModel: DebugViewModel = hiltViewModel())
     val camera = rememberPermissionState(Manifest.permission.CAMERA)
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.debug_title)) },
-                navigationIcon = { TextButton(onClick = onBack) { Text(stringResource(R.string.nav_back)) } },
-            )
+            AppTopBar(stringResource(R.string.debug_title), onBack = onBack)
         },
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {

@@ -4,8 +4,7 @@
 
     <!-- Main screen -->
     <string name="main_toggle_label">Управление жестами</string>
-    <string name="main_toggle_off">Выключено</string>
-    <string name="main_setup_section">Настройка</string>
+    <string name="main_setup_section">Подготовка</string>
     <string name="perm_camera">Камера</string>
     <string name="perm_camera_desc">Нужна, чтобы видеть руку. Видео не покидает устройство.</string>
     <string name="perm_notifications">Уведомления</string>
@@ -22,11 +21,6 @@
     <string name="main_apps_choose">Выбрать приложения</string>
     <string name="main_apps_none_hint">Выберите хотя бы одно приложение, в котором будут работать жесты</string>
     <string name="main_gestures_section">Жесты</string>
-    <string name="gesture_swipe_right_desc">Свайп вправо → следующий трек</string>
-    <string name="gesture_swipe_left_desc">Свайп влево → предыдущий трек</string>
-    <string name="gesture_palm_desc">Ладонь, удержание 0,5 с → пауза / воспроизведение</string>
-    <string name="gesture_fist_open_desc">Разжатие кулака → пауза / воспроизведение</string>
-    <string name="gesture_finger_desc">Указательный палец влево / вправо → свайп влево / вправо по экрану (переключает треки в плеере). В приложениях с зонами палец двигает курсор.</string>
     <string name="power_save_title">Энергосбережение</string>
     <string name="power_save_desc">Анализировать 10 кадров в секунду, пока руки нет в кадре</string>
     <string name="classifier_title">Распознавание поз: обученная модель</string>
@@ -215,4 +209,35 @@
     <string name="gesture_finger_left">Палец влево</string>
     <string name="gesture_finger_right">Палец вправо</string>
     <string name="gesture_fist_open">Разжатие кулака</string>
+
+    <!-- Redesigned main screen and language -->
+    <string name="main_tagline">Управляйте телефоном жестами руки</string>
+    <string name="main_hero_on_title">Жесты включены</string>
+    <string name="main_hero_off_title">Жесты выключены</string>
+    <string name="main_hero_hint_ready">Включите переключатель, чтобы начать</string>
+    <string name="main_hero_hint_missing">Сначала завершите подготовку ниже</string>
+    <string name="setup_progress">%1$d из %2$d</string>
+    <string name="main_apps_desc">Жесты работают только в выбранных приложениях</string>
+    <string name="gesture_swipe_right_name">Свайп вправо</string>
+    <string name="gesture_swipe_left_name">Свайп влево</string>
+    <string name="gesture_palm_name">Ладонь, 0,5 с</string>
+    <string name="gesture_fist_open_name">Разжать кулак</string>
+    <string name="gesture_finger_name">Указательный палец влево / вправо</string>
+    <string name="action_next_track">Следующий трек</string>
+    <string name="action_prev_track">Предыдущий трек</string>
+    <string name="action_play_pause">Пауза / воспроизведение</string>
+    <string name="action_screen_swipe">Свайп по экрану (переключает треки в плеерах)</string>
+    <string name="gestures_finger_note">В приложениях с зонами указательный палец вместо этого двигает курсор.</string>
+    <string name="main_zones_desc">Действия для областей экрана каждого приложения</string>
+    <string name="cursor_settings_desc">Способ нажатия, стабильность, калибровка</string>
+    <string name="settings_section">Настройки</string>
+    <string name="language_title">Язык</string>
+    <string name="language_desc">Язык интерфейса приложения</string>
+    <string name="tools_section">Инструменты</string>
+    <string name="main_custom_desc">Запишите свои жесты и назначьте им действия</string>
+    <string name="main_debug_desc">Камера, точки руки, fps, яркость, запись</string>
+    <string name="version_label">Версия %1$s</string>
+    <string name="setup_all_done">Всё готово: доступы выданы</string>
+    <string name="action_show">Показать</string>
+    <string name="action_hide">Скрыть</string>
 </resources>
