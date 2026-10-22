@@ -45,10 +45,7 @@
 
 ## Требования
 
-- JDK 17, Android SDK (platform 35, build-tools 35.0.0).
 - Устройство с Android 8.0+ (minSdk 26) и фронтальной камерой.
-
-На машине разработчика всё установлено в `C:\Users\vladk\dev`: `jdk-17.0.20.1+1`, `android-sdk`, `gradle-8.11.1`. Переменные `JAVA_HOME` и `ANDROID_HOME` прописаны в пользовательском окружении.
 
 ## Сборка
 
