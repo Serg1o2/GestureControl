@@ -45,6 +45,9 @@ data class DebugUiState(
     val engineState: EngineState = EngineState.NoHand,
     val fps: Float = 0f,
     val powerSaving: Boolean = false,
+    /** Mean frame luma in [0, 1] and whether the frame was brightened for detection. */
+    val brightness: Float? = null,
+    val brightened: Boolean = false,
     val pointer: PointerOutput? = null,
     val lastPointerEvent: PointerEvent? = null,
     val lastGesture: Gesture? = null,
@@ -126,6 +129,8 @@ class DebugViewModel @Inject constructor(
                 engineState = result.state,
                 fps = result.fps,
                 powerSaving = result.powerSaving,
+                brightness = result.frame.brightness,
+                brightened = result.brightened,
                 pointer = result.pointer,
                 lastPointerEvent = result.pointer?.event ?: it.lastPointerEvent,
                 lastGesture = result.event?.gesture ?: it.lastGesture,

@@ -104,6 +104,12 @@ private fun DebugContent(viewModel: DebugViewModel) {
                 stringResource(R.string.debug_fps, state.fps) +
                     if (state.powerSaving) " · " + stringResource(R.string.debug_power_save_on) else "",
             )
+            state.brightness?.let { luma ->
+                Text(
+                    stringResource(R.string.debug_brightness, luma * 100) +
+                        if (state.brightened) " · " + stringResource(R.string.debug_brightened) else "",
+                )
+            }
             Text(stringResource(R.string.debug_last_gesture, state.lastGesture?.label() ?: stringResource(R.string.debug_none)))
             val classifier by viewModel.classifierStatus.collectAsStateWithLifecycle()
             Text(

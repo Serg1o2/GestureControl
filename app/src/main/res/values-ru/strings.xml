@@ -189,6 +189,8 @@
     <string name="debug_state">Состояние: %1$s</string>
     <string name="debug_fps">Анализ: %1$.1f к/с</string>
     <string name="debug_power_save_on">энергосбережение</string>
+    <string name="debug_brightness">Яркость кадра: %1$.0f%%</string>
+    <string name="debug_brightened">мало света: кадр осветлён</string>
     <string name="debug_last_gesture">Последний жест: %1$s</string>
     <string name="debug_none">—</string>
     <string name="debug_execute_actions">Выполнять действия</string>

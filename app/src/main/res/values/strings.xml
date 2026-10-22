@@ -190,6 +190,8 @@
     <string name="debug_state">State: %1$s</string>
     <string name="debug_fps">Analysis: %1$.1f fps</string>
     <string name="debug_power_save_on">power saving</string>
+    <string name="debug_brightness">Frame brightness: %1$.0f%%</string>
+    <string name="debug_brightened">low light: brightened</string>
     <string name="debug_last_gesture">Last gesture: %1$s</string>
     <string name="debug_none">—</string>
     <string name="debug_execute_actions">Execute actions</string>
