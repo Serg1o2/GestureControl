@@ -14,6 +14,7 @@ data class GestureConfig(
         minDistance = 0.15f,
         minVelocity = 0.7f,
         maxDurationMs = 500,
+        minFrames = 3,
     ),
     val fistOpen: FistOpenConfig = FistOpenConfig(),
     /** Global debounce: no gesture can fire within this time after any gesture. */
@@ -31,9 +32,9 @@ data class StabilityConfig(
     /**
      * A palm jump between consecutive detections larger than this (in hand sizes, isotropic)
      * means the tracker lost the hand or switched to another one: tracking restarts as for a new hand.
-     * 0 disables the check.
+     * 0 disables the check. Default chosen on the replay bench (docs/phantoms.md).
      */
-    val maxJumpHandSizes: Float = 0f,
+    val maxJumpHandSizes: Float = 2f,
     /**
      * After the hand appears (or tracking restarts) nothing fires for this long and swipes start
      * from scratch, so the motion of a hand entering the frame is not a swipe. 0 disables.
@@ -81,7 +82,7 @@ data class SwipeConfig(
      */
     val oppositeSuppressMs: Long = 900,
     /** A swipe must be seen on at least this many frames (start and end included): rejects one-frame jumps. */
-    val minFrames: Int = 2,
+    val minFrames: Int = 3,
     /**
      * Poses a palm swipe is made with; empty = any pose except the pointer poses.
      * Casual hand motion (pointing around, gesturing while talking) is mostly in undefined poses.

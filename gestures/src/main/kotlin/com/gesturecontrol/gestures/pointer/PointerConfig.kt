@@ -44,7 +44,7 @@ data class PointerConfig(
      * last open (ratio above [pinchOpen]). A relaxed hand whose thumb and index already touch never
      * presses. 0 disables.
      */
-    val pinchMaxClosingMs: Long = 0,
+    val pinchMaxClosingMs: Long = 300,
     /**
      * Index tip must be at least this far from the wrist (in hand sizes) for a pinch.
      * Rejects a fist, where thumb and index tips are also close.
@@ -73,12 +73,12 @@ data class ScrollConfig(
     /** Moving the hand back is ignored for this long after a scroll. */
     val oppositeSuppressMs: Long = 600,
     /** A stroke must be seen on at least this many frames (start and end included). */
-    val minFrames: Int = 2,
+    val minFrames: Int = 3,
     /**
      * A stroke is reported only after it has held for this long without coming back by more than
      * [maxReturnShare] of its length: a two-finger tap (down and back up) is not a scroll. 0 = immediate.
      */
-    val confirmMs: Long = 0,
+    val confirmMs: Long = 150,
     val maxReturnShare: Float = 0.5f,
     /** When true, [minDistance] and [minVelocity] are in hand sizes instead of frame heights. */
     val inHandSizes: Boolean = false,

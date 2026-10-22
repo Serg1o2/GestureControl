@@ -15,14 +15,21 @@ GestureControl: Android app that controls the phone with hand gestures seen by t
 ./gradlew :gestures:test       # gesture logic unit tests (pure JVM, fast)
 ./gradlew :app:lintDebug       # Android lint; must have no errors
 ./gradlew installDebug         # install on a connected device
+./gradlew :gestures:replayBench -PbenchArgs="--split test --config default,proposed"   # phantom-event bench (needs ml/data/replay)
 ```
+
+Phantom bench and low-light benchmark (see docs/phantoms.md, docs/lowlight.md):
+`python -m gc_ml.lowlight run|report` (simulated low light on IPN, enhancement variants) →
+`python -m gc_ml.replay_export --lowlight` (CSV streams with segment labels) → `:gestures:replayBench`.
+Tune on `--split train+val`, report on `--split test`; every new protection is a config option first, A/B tested in `bench/ReplayBench.kt` `configs`.
 
 After each change: `assembleDebug` and `:gestures:test` must pass before committing.
 
 ## Architecture
 
 - `:gestures` — **pure Kotlin/JVM module, no Android dependencies allowed.** All gesture and coordinate logic lives here so it can be unit-tested on recorded landmark sequences:
-  - root package: `GestureEngine` (media gestures state machine), `SwipeDetector`, `StaticGestureClassifier` (poses + pinch ratio), `OneEuroFilter`, `PowerSaveThrottler`, `LandmarkCsv`, `GestureConfig`;
+  - root package: `GestureEngine` (media gestures state machine), `SwipeDetector`, `StaticGestureClassifier` (poses + pinch ratio), `OneEuroFilter`, `PowerSaveThrottler`, `LandmarkCsv`, `GestureConfig`, `TrackingGuard` (tracking restart on hand loss / palm jump, settle time; shared by both engines);
+  - `lowlight/`: `LowLight` (luma, gamma LUT — twin of `gamma_lut` in lowlight.py; brightening is off by default because it hurts MediaPipe), `AeFpsRange` (camera AE range for the dark);
   - `mapping/`: `ScreenMapper` + `Calibration` (3-point affine frame→screen), `CalibrationCapture`, `Zone`/`ZoneAction`/`ZoneSet` (hit test), `CommandPlanner` (press/scroll → `TouchCommand`), `NormPoint`/`NormRect`;
   - `pointer/`: `PointerEngine` (cursor, pinch/dwell press, two-finger scroll), `CursorSmoother` (One Euro + dead zone), `ScrollDetector`, `PointerConfig`.
   - `ml/`: `LandmarkNormalizer` (norm-v1, **twin of `ml/gc_ml/normalize.py`**, parity-tested), `PoseClassifier` (rules or model), `VotingPoseClassifier` (per-class thresholds + 5-frame vote);
@@ -42,6 +49,8 @@ After each change: `assembleDebug` and `:gestures:test` must pass before committ
 
 - Landmark coordinates in `:gestures` are "user view": upright, mirrored; x grows toward the user's right. The conversion happens only in `HandAnalyzer`. Screen coordinates are normalized [0, 1] of the real (full) screen; pixels appear only in `GestureExecutor`/`CursorOverlay`.
 - Every threshold goes into `GestureConfig` / `PointerConfig` / `PowerSaveConfig`, never hard-coded in detectors. Never use landmark z as a trigger.
+- Motion thresholds are measured in hand sizes (wrist → middle MCP, isotropic) where `inHandSizes` is set, so sensitivity does not depend on distance or frame orientation.
+- Don't change gesture defaults without the replay bench: a change must not raise phantoms/min or lower hits on the test split.
 - Coordinate mapping, zones and hit testing stay pure and unit-tested.
 - Android 14+: the camera FGS may only be started from a visible screen (`GestureService.start` from the main screen). The service is `START_NOT_STICKY` and never restarts itself from the background; it binds/unbinds the camera instead. In-app camera screens (debug, calibration) set `GestureServiceState.debugPreviewActive` so the service releases the camera.
 - Accessibility failures (cancelled/rejected gesture, secure window, locked screen) show a rate-limited hint next to the cursor; never crash.

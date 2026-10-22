@@ -205,8 +205,11 @@ class PointerEngineTest {
 
     @Test
     fun twoFingerStrokesScroll() {
-        val up = SyntheticHand.Sequence().move(Pose.TWO_FINGERS, 0.5f, 0.85f, 0.5f, 0.6f, 300).build()
-        val down = SyntheticHand.Sequence().move(Pose.TWO_FINGERS, 0.5f, 0.6f, 0.5f, 0.85f, 300).build()
+        // The hold after the stroke gives the scroll confirmation (ScrollConfig.confirmMs) its frames.
+        val up = SyntheticHand.Sequence().move(Pose.TWO_FINGERS, 0.5f, 0.85f, 0.5f, 0.6f, 300)
+            .hold(Pose.TWO_FINGERS, 0.5f, 0.6f, 200).build()
+        val down = SyntheticHand.Sequence().move(Pose.TWO_FINGERS, 0.5f, 0.6f, 0.5f, 0.85f, 300)
+            .hold(Pose.TWO_FINGERS, 0.5f, 0.85f, 200).build()
         assertEquals(listOf(VerticalDirection.UP), scrolls(up))
         assertEquals(listOf(VerticalDirection.DOWN), scrolls(down))
     }
@@ -222,6 +225,7 @@ class PointerEngineTest {
             .move(Pose.TWO_FINGERS, 0.5f, 0.85f, 0.5f, 0.6f, 300)
             .move(Pose.TWO_FINGERS, 0.5f, 0.6f, 0.5f, 0.85f, 1000) // slow return: not a stroke
             .move(Pose.TWO_FINGERS, 0.5f, 0.85f, 0.5f, 0.6f, 300)
+            .hold(Pose.TWO_FINGERS, 0.5f, 0.6f, 200)
             .build()
         assertEquals(listOf(VerticalDirection.UP, VerticalDirection.UP), scrolls(repeated))
     }

@@ -13,7 +13,14 @@ import org.junit.Test
  * off and the fixed behaviour with it on, so that a regression in either direction is caught.
  */
 class StabilityTest {
-    private val stable = StabilityConfig(maxJumpHandSizes = 1.5f, settleMs = 200)
+    private val stable = StabilityConfig(maxJumpHandSizes = 2f, settleMs = 200)
+
+    /** Engine and pointer with every protection off: the behaviour before docs/phantoms.md. */
+    private val unprotected = GestureConfig(stability = StabilityConfig(maxJumpHandSizes = 0f))
+    private val unprotectedPointer = PointerConfig(
+        stability = StabilityConfig(maxJumpHandSizes = 0f),
+        pinchMaxClosingMs = 0,
+    ).let { it.copy(scroll = it.scroll.copy(confirmMs = 0, minFrames = 2)) }
 
     private fun gestures(config: GestureConfig, frames: List<HandFrame>) =
         GestureEngine(config).run(frames).map { it.gesture }
@@ -29,8 +36,8 @@ class StabilityTest {
 
     @Test
     fun jumpToTheOtherHandIsNotASwipe() {
-        assertEquals(listOf(Gesture.SWIPE_RIGHT), gestures(GestureConfig(), otherHand))
-        assertEquals(emptyList<Gesture>(), gestures(GestureConfig(stability = stable), otherHand))
+        assertEquals(listOf(Gesture.SWIPE_RIGHT), gestures(unprotected, otherHand))
+        assertEquals(emptyList<Gesture>(), gestures(GestureConfig(), otherHand))
     }
 
     @Test
@@ -135,10 +142,10 @@ class StabilityTest {
 
     @Test
     fun fingersRestingHalfClosedThenTouchingDoNotPress() {
-        val closing = PointerConfig(pinchMaxClosingMs = 300)
+        val closing = PointerConfig()
         // Relaxed hand: thumb and index hover between the open and close thresholds, then touch.
         val relaxed = pinchAfterRest(kForRatio(0.38f), 1000)
-        assertEquals(1, presses(PointerConfig(), relaxed).size)
+        assertEquals(1, presses(unprotectedPointer, relaxed).size)
         assertEquals(0, presses(closing, relaxed).size)
         // A deliberate pinch from open fingers still presses.
         val deliberate = pinchAfterRest(0f, 0)
@@ -152,7 +159,7 @@ class StabilityTest {
 
     @Test
     fun twoFingerTapIsNotAScrollButAStrokeIs() {
-        val confirm = PointerConfig().let { it.copy(scroll = it.scroll.copy(confirmMs = 150)) }
+        val confirm = PointerConfig()
         val tap = SyntheticHand.Sequence()
             .hold(Pose.TWO_FINGERS, 0.5f, 0.6f, 200)
             .move(Pose.TWO_FINGERS, 0.5f, 0.6f, 0.5f, 0.8f, 150)
@@ -164,7 +171,7 @@ class StabilityTest {
             .move(Pose.TWO_FINGERS, 0.5f, 0.6f, 0.5f, 0.85f, 300)
             .hold(Pose.TWO_FINGERS, 0.5f, 0.85f, 300)
             .build()
-        assertEquals(listOf(VerticalDirection.DOWN), scrolls(PointerConfig(), tap))
+        assertEquals(listOf(VerticalDirection.DOWN), scrolls(unprotectedPointer, tap))
         assertEquals(emptyList<VerticalDirection>(), scrolls(confirm, tap))
         assertEquals(listOf(VerticalDirection.DOWN), scrolls(confirm, stroke))
     }

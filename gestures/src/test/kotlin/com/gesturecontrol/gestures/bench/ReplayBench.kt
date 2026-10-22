@@ -105,6 +105,9 @@ val configs: Map<String, Pair<GestureConfig, PointerConfig>> by lazy {
         "scroll_confirm150" to (base to basePointer.copy(scroll = basePointer.scroll.copy(confirmMs = 150))),
         "scroll_hands_confirm" to (base to basePointer.copy(scroll = scrollHands.copy(confirmMs = 150))),
         "hands_jump" to (hands.copy(stability = jump) to basePointer.copy(stability = jump, scroll = scrollHands)),
+        "hands_jump2" to (hands.copy(stability = StabilityConfig(maxJumpHandSizes = 2f)) to basePointer),
+        "hands_jump25" to (hands.copy(stability = StabilityConfig(maxJumpHandSizes = 2.5f)) to basePointer),
+        "hands_jump3" to (hands.copy(stability = StabilityConfig(maxJumpHandSizes = 3f)) to basePointer),
         "hands_jump_palm" to (
             hands.copy(stability = jump, swipe = hands.swipe.copy(poses = setOf(HandPose.OPEN_PALM))) to
                 basePointer.copy(stability = jump, scroll = scrollHands)
@@ -112,6 +115,30 @@ val configs: Map<String, Pair<GestureConfig, PointerConfig>> by lazy {
         "hands_jump_palmfist" to (
             hands.copy(stability = jump, swipe = hands.swipe.copy(poses = setOf(HandPose.OPEN_PALM, HandPose.FIST))) to
                 basePointer.copy(stability = jump, scroll = scrollHands)
+            ),
+        // Candidate defaults: the protections that helped on train+val without hurting hits.
+        "proposed" to (
+            hands.copy(
+                stability = StabilityConfig(maxJumpHandSizes = 2f),
+                swipe = hands.swipe.copy(minFrames = 3),
+                fingerSwipe = hands.fingerSwipe.copy(minFrames = 3),
+            ) to basePointer.copy(
+                stability = StabilityConfig(maxJumpHandSizes = 2f),
+                pinchMaxClosingMs = 300,
+                scroll = scrollHands.copy(confirmMs = 150),
+            )
+            ),
+        // The same protections without switching swipes to hand-size units.
+        "proposed_frame" to (
+            base.copy(
+                stability = StabilityConfig(maxJumpHandSizes = 2f),
+                swipe = base.swipe.copy(minFrames = 3),
+                fingerSwipe = base.fingerSwipe.copy(minFrames = 3),
+            ) to basePointer.copy(
+                stability = StabilityConfig(maxJumpHandSizes = 2f),
+                pinchMaxClosingMs = 300,
+                scroll = basePointer.scroll.copy(minFrames = 3, confirmMs = 150),
+            )
             ),
         "all" to (
             hands.copy(
