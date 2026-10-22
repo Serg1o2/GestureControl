@@ -19,6 +19,9 @@ enum class HandPose {
     THUMB_UP,
     THUMB_DOWN,
     OTHER,
+
+    /** Thumb and index tips touching, other fingers free ("ok"). Produced only by the pinch model ([com.gesturecontrol.gestures.ml.PinchDetector]). */
+    PINCH,
 }
 
 /** Classifies a single hand pose from 2D landmark geometry (z is never used). */

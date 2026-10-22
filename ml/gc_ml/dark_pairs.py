@@ -35,11 +35,13 @@ SOURCE_ID = 3
 SPLIT_CODE = {"train": 0, "val": 1, "test": 2}
 
 
-def build(conditions: list[str], stride: int, min_conf: float) -> dict:
+def build(conditions: list[str], stride: int, min_conf: float, teacher_dir: Path | None = None) -> dict:
     import tensorflow as tf
 
-    teacher = tf.keras.models.load_model(TEACHER)
-    thresholds = np.array(json.loads(TEACHER_META.read_text())["thresholds"], np.float32)
+    model_path = (teacher_dir / "pose_mlp.keras") if teacher_dir else TEACHER
+    meta_path = (teacher_dir / "pose_mlp.json") if teacher_dir else TEACHER_META
+    teacher = tf.keras.models.load_model(model_path)
+    thresholds = np.array(json.loads(meta_path.read_text())["thresholds"], np.float32)
     splits = _splits()
     xs, ys, sp, cs = [], [], [], []
     agree = {}  # condition -> (teacher-agreeing dark predictions, total), before fine-tuning
@@ -118,6 +120,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("cmd", choices=["build", "evaluate"])
     ap.add_argument("--models", nargs="+", type=Path)
+    ap.add_argument("--teacher", type=Path, help="model folder of the teacher (default: artifacts/static)")
     ap.add_argument("--conditions", nargs="+", default=None, help="low-light condition folders (default: all)")
     ap.add_argument("--stride", type=int, default=3)
     ap.add_argument("--min-conf", type=float, default=0.9)
@@ -126,7 +129,7 @@ def main() -> None:
         print(json.dumps(evaluate(args.models), indent=2))
         return
     conds = args.conditions or sorted(p.name for p in LOWLIGHT_OUT.iterdir() if p.is_dir())
-    print(json.dumps(build(conds, args.stride, args.min_conf), indent=2))
+    print(json.dumps(build(conds, args.stride, args.min_conf, args.teacher), indent=2))
 
 
 if __name__ == "__main__":

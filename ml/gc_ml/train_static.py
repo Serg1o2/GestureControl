@@ -56,8 +56,24 @@ def batches(x, y, batch, rng, augment):
         yield xb, y[b]
 
 
+def init_from(model, old_path: Path) -> None:
+    """Fine-tuning start: copies the old model's weights; a wider output layer (new classes appended at the
+    end) keeps the old classes' weights and gets the new rows from a fresh initialisation."""
+    import tensorflow as tf
+
+    old = tf.keras.models.load_model(old_path)
+    old_dense = [l for l in old.layers if isinstance(l, tf.keras.layers.Dense)]
+    new_dense = [l for l in model.layers if isinstance(l, tf.keras.layers.Dense)]
+    assert len(old_dense) == len(new_dense), "different architecture"
+    for o, n in zip(old_dense, new_dense):
+        (ow, ob), (nw, nb) = o.get_weights(), n.get_weights()
+        nw[:, :ow.shape[1]] = ow
+        nb[:ob.shape[0]] = ob
+        n.set_weights([nw, nb])
+
+
 def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 1024, oversample: int = 5,
-          oversample_dark: int = 1) -> dict:
+          oversample_dark: int = 1, init: Path | None = None, lr: float = 1e-3) -> dict:
     import tensorflow as tf
 
     tf.keras.utils.set_random_seed(SEED)
@@ -77,9 +93,11 @@ def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 
     print(f"train {len(xtr)}  val {len(xva)}  classes {np.bincount(ytr, minlength=n).tolist()}")
 
     model = build_model(n)
+    if init is not None:
+        init_from(model, init)
     steps = int(np.ceil(len(xtr) / batch)) * epochs
-    lr = tf.keras.optimizers.schedules.CosineDecay(1e-3, steps)
-    model.compile(tf.keras.optimizers.Adam(lr), "sparse_categorical_crossentropy", metrics=["accuracy"])
+    schedule = tf.keras.optimizers.schedules.CosineDecay(lr, steps)
+    model.compile(tf.keras.optimizers.Adam(schedule), "sparse_categorical_crossentropy", metrics=["accuracy"])
     cw = class_weights(ytr, n)
     sw_table = np.array([cw[i] for i in range(n)], dtype=np.float32)
 
@@ -142,7 +160,7 @@ def tflite_predict(path: Path, x: np.ndarray) -> np.ndarray:
     interp.allocate_tensors()
     inp = interp.get_input_details()[0]
     out = interp.get_output_details()[0]
-    res = np.empty((len(x), len(POSE_CLASSES)), dtype=np.float32)
+    res = np.empty((len(x), int(out["shape"][-1])), dtype=np.float32)
     for i in range(len(x)):
         interp.set_tensor(inp["index"], x[i:i + 1].astype(np.float32))
         interp.invoke()
@@ -158,11 +176,14 @@ def main() -> None:
     ap.add_argument("--epochs", type=int, default=25)
     ap.add_argument("--oversample", type=int, default=5, help="repeat factor for our-MediaPipe and own samples")
     ap.add_argument("--oversample-dark", type=int, default=1, help="repeat factor for the low-light rows (source 3)")
+    ap.add_argument("--init", type=Path, help="fine-tune: start from this .keras model (new classes appended)")
+    ap.add_argument("--lr", type=float, default=1e-3, help="initial learning rate (smaller for fine-tuning)")
     ap.add_argument("--report", type=Path, default=ROOT / "artifacts" / "static" / "report.md")
     args = ap.parse_args()
 
     data = load(args.features)
-    info = train(data, args.out, args.epochs, oversample=args.oversample, oversample_dark=args.oversample_dark)
+    info = train(data, args.out, args.epochs, oversample=args.oversample, oversample_dark=args.oversample_dark,
+                 init=args.init, lr=args.lr)
 
     import tensorflow as tf
 

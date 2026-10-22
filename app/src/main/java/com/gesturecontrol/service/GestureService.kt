@@ -290,6 +290,7 @@ class GestureService : LifecycleService() {
         val gestures = GestureEngine(
             key.toggles.applyTo(SensitivityMapping.apply(GestureConfig(), key.sensitivity)),
             poseClassifiers.forGestures,
+            poseClassifiers.pinch,
         )
         gestureEngine = gestures
         applyModeFlags()

@@ -71,6 +71,10 @@ def main() -> None:
         run(PY_TRAIN, "gc_ml.train_static", "--features", *static_inputs, "--epochs", "3" if pilot else "25",
             "--oversample-dark", "5")
 
+    # 3b. Separate pinch detector for the volume slider (HaGRID "ok" vs everything else + IPN negatives).
+    if needed("train-pinch", ML / "artifacts" / "pinch" / "pinch_mlp.tflite"):
+        run(PY_TRAIN, "gc_ml.train_pinch", "--epochs", "3" if pilot else "15")
+
     # 4. Dynamic data and model (IPN Hand).
     if not args.skip_dynamic:
         if needed("ipn-download", ML / "data" / "raw" / "ipn" / "videos_tgz"):

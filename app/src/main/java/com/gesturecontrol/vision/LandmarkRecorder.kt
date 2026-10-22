@@ -11,7 +11,7 @@ import java.util.Locale
 /** Labels offered by the training logger; names match ml/gc_ml (POSE_CLASSES, DYNAMIC_CLASSES). */
 val TRAINING_LABELS = listOf(
     "NO_GESTURE",
-    "OPEN_PALM", "FIST", "POINTING", "TWO_FINGERS", "THUMB_UP", "THUMB_DOWN",
+    "OPEN_PALM", "FIST", "POINTING", "TWO_FINGERS", "THUMB_UP", "THUMB_DOWN", "PINCH",
     "SWIPE_LEFT", "SWIPE_RIGHT", "FINGER_LEFT", "FINGER_RIGHT", "FIST_OPEN",
 )
 

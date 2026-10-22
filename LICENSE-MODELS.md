@@ -7,6 +7,7 @@ those datasets require:
 | Files | Trained on | License |
 |---|---|---|
 | `app/src/main/assets/models/pose_mlp.tflite`, `pose_mlp.json`; `ml/artifacts/static/*`; `gestures/src/test/resources/ml/pose_mlp_*`; `app/src/androidTest/assets/pose_vectors.csv` | HaGRIDv2 (hand landmarks and images) and IPN Hand (low-light pairs) | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| `app/src/main/assets/models/pinch_mlp.tflite`, `pinch_mlp.json`; `ml/artifacts/pinch/*`; `gestures/src/test/resources/ml/pinch_mlp_weights.txt` | HaGRIDv2 and IPN Hand | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
 | `ml/artifacts/dynamic/*` | IPN Hand | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 
 Attribution:

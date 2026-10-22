@@ -163,7 +163,7 @@ def _extract_chunk(args) -> dict:
     import cv2
 
     mp, det = _detector(model_path)
-    rows = {"lm": [], "aspect": [], "label": [], "split": [], "ann_lm": []}
+    rows = {"lm": [], "aspect": [], "label": [], "split": [], "ann_lm": [], "image": []}
     lost = 0
     failed = 0
     for member in members:
@@ -192,6 +192,7 @@ def _extract_chunk(args) -> dict:
             rows["aspect"].append(w / h)
             rows["label"].append(label)
             rows["split"].append(a["split"])
+            rows["image"].append(image_id)
             rows["ann_lm"].append(np.asarray(ann_lm, np.float32)[:, :2] if ann_lm else np.full((21, 2), np.nan, np.float32))
     det.close()
     np.savez_compressed(
@@ -203,6 +204,7 @@ def _extract_chunk(args) -> dict:
         ann_lm=np.asarray(rows["ann_lm"], np.float32).reshape(-1, 21, 2),
         lost=np.asarray(lost),
         failed=np.asarray(failed),
+        image=np.asarray(rows["image"]),
     )
     return {"chunk": chunk_id, "hands": len(rows["lm"]), "lost": lost, "failed": failed}
 
@@ -223,10 +225,13 @@ def zip_directory(url: str, cache: Path) -> list[dict]:
     return entries
 
 
-def reextract_sample(ann_zip: Path, per_class: int, workers: int, out_dir: Path, model_path: Path, seed: int = 42) -> dict:
+def reextract_sample(ann_zip: Path, per_class: int, workers: int, out_dir: Path, model_path: Path, seed: int = 42,
+                     classes: list[str] | None = None, exclude_dirs: list[Path] | None = None) -> dict:
     """Downloads only `per_class` images of each class (HTTP range requests) and extracts landmarks.
 
     Chunks already on disk are skipped, so the run can be resumed after an interruption.
+    [classes] limits the download to those HaGRID classes; images already extracted into
+    [exclude_dirs] are not picked again (a targeted top-up of an existing sample).
     """
     ann: dict[str, dict] = {}
     with zipfile.ZipFile(ann_zip) as zf:
@@ -237,9 +242,20 @@ def reextract_sample(ann_zip: Path, per_class: int, workers: int, out_dir: Path,
                     ann[image_id] = a
     members = zip_directory(IMAGES_512_URL, RAW / "hagridv2_512_directory.json")
     rng = np.random.default_rng(seed)
+    taken: set[str] = set()
+    for d in exclude_dirs or []:
+        for p in d.glob("chunk_*.npz"):
+            names = np.load(p, allow_pickle=False).get("image") if "image" in np.load(p, allow_pickle=False).files else None
+            if names is not None:
+                taken.update(str(n) for n in names)
     by_class: dict[str, list[dict]] = {}
     for m in members:
-        by_class.setdefault(Path(m["name"]).parent.name, []).append(m)
+        cls = Path(m["name"]).parent.name
+        if classes and cls not in classes:
+            continue
+        if Path(m["name"]).stem in taken:
+            continue
+        by_class.setdefault(cls, []).append(m)
     chosen = []
     for cls, ms in sorted(by_class.items()):
         idx = rng.permutation(len(ms))[:per_class]
@@ -261,7 +277,9 @@ def reextract_sample(ann_zip: Path, per_class: int, workers: int, out_dir: Path,
 
 
 def build_reextracted_features(chunk_dir: Path, out: Path) -> dict:
-    parts = [np.load(p, allow_pickle=False) for p in sorted(chunk_dir.glob("chunk_*.npz"))]
+    """All re-extracted chunks: the main sample and any targeted top-ups (hagrid_mp_*)."""
+    dirs = [chunk_dir] + sorted(d for d in chunk_dir.parent.glob("hagrid_mp_*") if d.is_dir() and d != chunk_dir)
+    parts = [np.load(p, allow_pickle=False) for d in dirs for p in sorted(d.glob("chunk_*.npz"))]
     lm = np.concatenate([p["lm"] for p in parts])
     aspect = np.concatenate([p["aspect"] for p in parts])
     labels = np.concatenate([p["label"] for p in parts])
@@ -284,6 +302,9 @@ def main() -> None:
     r = sub.add_parser("reextract")
     r.add_argument("--per-class", type=int, default=150)
     r.add_argument("--workers", type=int, default=8)
+    r.add_argument("--classes", nargs="*", help="only these HaGRID classes")
+    r.add_argument("--out", default="hagrid_mp_chunks", help="chunk folder under data/features")
+    r.add_argument("--seed", type=int, default=42)
     sub.add_parser("reextract-features")
     args = ap.parse_args()
 
@@ -291,7 +312,9 @@ def main() -> None:
         print(build_annotation_features(RAW / "annotations.zip", FEATURES_DIR / "static_hagrid_ann.npz", args.aspect))
     elif args.cmd == "reextract":
         model = ROOT.parent / "app" / "src" / "main" / "assets" / "hand_landmarker.task"
-        print(reextract_sample(RAW / "annotations.zip", args.per_class, args.workers, FEATURES_DIR / "hagrid_mp_chunks", model))
+        out = FEATURES_DIR / args.out
+        exclude = [FEATURES_DIR / "hagrid_mp_chunks"] if args.out != "hagrid_mp_chunks" else []
+        print(reextract_sample(RAW / "annotations.zip", args.per_class, args.workers, out, model, args.seed, args.classes, exclude))
     elif args.cmd == "reextract-features":
         print(build_reextracted_features(FEATURES_DIR / "hagrid_mp_chunks", FEATURES_DIR / "static_hagrid_mp.npz"))
 

@@ -17,10 +17,12 @@ data class VolumeSliderConfig(
     /** Index tip to wrist distance (hand sizes) required for a pinch; rejects a fist. */
     val minIndexReach: Float = 1.0f,
     /**
-     * The pinch must close within this time after thumb and index were open (above [pinchOpen]):
-     * a deliberate pinch, not a relaxed hand whose fingers already rest together. 0 disables.
+     * A pinch that closes within this time after thumb and index were open (above [pinchOpen]) is
+     * deliberate and arms after [armMs]; a hand that was already pinched arms after [restingArmMs].
      */
     val maxClosingMs: Long = 300,
+    /** Arming time of a pinch that did not close from open fingers (a hand already resting pinched). 0 = never arms. */
+    val restingArmMs: Long = 700,
     /** The pinch must be held this long, nearly still, before the slider starts (arming). */
     val armMs: Long = 300,
     /** Max palm travel during arming; more motion restarts the arming (a moving pinch is not a slider). */
@@ -66,6 +68,8 @@ class VolumeSlider(private val config: VolumeSliderConfig = VolumeSliderConfig()
     private enum class Phase { IDLE, ARMING, ACTIVE }
 
     private var phase = Phase.IDLE
+    /** The current arming started from open fingers (see [VolumeSliderConfig.maxClosingMs]). */
+    private var deliberate = false
     private var anchorY = 0f
     private var armStartTs = 0L
     private var lastClosedTs = Long.MIN_VALUE / 2
@@ -96,21 +100,30 @@ class VolumeSlider(private val config: VolumeSliderConfig = VolumeSliderConfig()
     /** True during [VolumeSliderConfig.afterReleaseSuppressMs] after a release. */
     fun suppressing(t: Long): Boolean = t - releasedAtTs < config.afterReleaseSuppressMs
 
-    fun update(t: Long, lm: List<Landmark>, aspect: Float): Step? {
+    /**
+     * [modelPinch]: the pinch model ([com.gesturecontrol.gestures.ml.PinchDetector]) sees a pinch in this frame;
+     * it also counts as a pinch (e.g. "ok" with the other fingers extended, which the folded-fingers geometry rejects).
+     */
+    fun update(t: Long, lm: List<Landmark>, aspect: Float, modelPinch: Boolean = false): Step? {
         val ratio = PinchGeometry.ratio(lm)
         val limit = if (phase == Phase.IDLE) config.pinchClose else config.pinchOpen
-        val closed = PinchGeometry.isPinchHand(lm, config.minIndexReach) && ratio < limit
+        val geometric = PinchGeometry.isPinchHand(lm, config.minIndexReach) && ratio < limit
+        // The model's pinch still needs the tips close together (a sanity check on its answer).
+        val closed = geometric || (modelPinch && ratio < config.pinchOpen)
         val size = isotropicHandSize(lm, aspect).coerceAtLeast(1e-6f)
         val (_, py) = lm.centroid(TrackedPoint.PALM_CENTER.indices)
 
         if (closed) lastClosedTs = t
         if (ratio >= config.pinchOpen) lastOpenTs = t
         when (phase) {
-            Phase.IDLE -> if (closed && (config.maxClosingMs <= 0 || t - lastOpenTs <= config.maxClosingMs)) startArming(t, py)
+            Phase.IDLE -> if (closed) {
+                deliberate = config.maxClosingMs <= 0 || t - lastOpenTs <= config.maxClosingMs
+                if (deliberate || config.restingArmMs > 0) startArming(t, py)
+            }
             Phase.ARMING -> when {
                 !closed && t - lastClosedTs > config.releaseToleranceMs -> phase = Phase.IDLE
                 abs(py - anchorY) / size > config.armMaxMotion -> startArming(t, py)
-                closed && t - armStartTs >= config.armMs -> {
+                closed && t - armStartTs >= (if (deliberate) config.armMs else config.restingArmMs) -> {
                     phase = Phase.ACTIVE
                     anchorY = py
                     emitted = 0

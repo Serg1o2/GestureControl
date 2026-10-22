@@ -104,6 +104,7 @@ class DebugViewModel @Inject constructor(
             val gestures = GestureEngine(
                 toggles.applyTo(SensitivityMapping.apply(GestureConfig(), sensitivity)),
                 poseClassifiers.forGestures,
+                poseClassifiers.pinch,
             )
             val analyzer = HandAnalyzer(engine, gestures, throttler, pointer, onResult = ::onResult)
             camera.bind(owner, analyzer, rotation, surfaceProvider)

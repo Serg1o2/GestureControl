@@ -1,5 +1,6 @@
 package com.gesturecontrol.gestures
 
+import com.gesturecontrol.gestures.ml.PinchDetector
 import com.gesturecontrol.gestures.ml.PoseClassifier
 import com.gesturecontrol.gestures.ml.RuleBasedPoseClassifier
 
@@ -60,6 +61,8 @@ class GestureEngine(
     private val config: GestureConfig = GestureConfig(),
     /** Rules by default; the ML pose model can be plugged in here. */
     private val poseClassifier: PoseClassifier = RuleBasedPoseClassifier(config.palm),
+    /** Separate pinch model for the volume slider; without it only the folded-fingers geometry counts. */
+    private val pinchDetector: PinchDetector? = null,
 ) {
     private val smoother = LandmarkSmoother(config.filter)
     private val swipeDetector = SwipeDetector(config.swipe)
@@ -143,7 +146,7 @@ class GestureEngine(
         if (!sliderOn) {
             volumeSlider.reset()
         } else if (volumeSlider.isActive || t >= cooldownUntil) {
-            val step = volumeSlider.update(t, lm, frame.aspect)
+            val step = volumeSlider.update(t, lm, frame.aspect, pinchDetector?.isPinch(lm, frame.aspect) == true)
             // Until its first step an armed slider leaves the other gestures alone (a swipe resets it in fire()).
             if (volumeSlider.isActive && volumeSlider.hasStepped) {
                 suppressOtherGestures()

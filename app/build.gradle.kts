@@ -18,8 +18,8 @@ android {
         applicationId = "com.gesturecontrol"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.7.0"
+        versionCode = 6
+        versionName = "0.8.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Phones (arm) plus x86_64 for the emulator; drops 32-bit x86 MediaPipe libraries.

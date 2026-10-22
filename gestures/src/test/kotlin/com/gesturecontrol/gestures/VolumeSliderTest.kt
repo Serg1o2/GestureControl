@@ -37,13 +37,46 @@ class VolumeSliderTest {
     }
 
     @Test
-    fun fingersThatAlreadyRestTogetherNeverArm() {
-        // A relaxed hand that is pinch-shaped from the start: no closing motion, no slider.
-        val relaxed = SyntheticHand.Sequence()
+    fun aHandAlreadyPinchedArmsOnlyAfterALongerHold() {
+        // Pinch-shaped from the start (no closing motion): it needs restingArmMs (0.7 s) of stillness.
+        val tooSoon = SyntheticHand.Sequence()
             .hold(Pose.PINCH, 0.5f, 0.6f, 500)
-            .move(Pose.PINCH, 0.5f, 0.6f, 0.5f, 0.6f - 1.2f * hand, 600)
+            .move(Pose.PINCH, 0.5f, 0.6f, 0.5f, 0.6f - 1.2f * hand, 900)
+            .hold(Pose.PINCH, 0.5f, 0.6f - 1.2f * hand, 300)
             .build()
-        assertEquals(emptyList<Step>(), run(relaxed))
+        assertEquals(emptyList<Step>(), run(tooSoon))
+        val heldLonger = SyntheticHand.Sequence()
+            .hold(Pose.PINCH, 0.5f, 0.6f, 800)
+            .move(Pose.PINCH, 0.5f, 0.6f, 0.5f, 0.6f - 1.2f * hand, 900)
+            .hold(Pose.PINCH, 0.5f, 0.6f - 1.2f * hand, 300)
+            .build()
+        assertEquals(List(4) { Step.UP }, run(heldLonger))
+    }
+
+    @Test
+    fun thePinchModelCountsEvenWithTheOtherFingersExtended() {
+        // An "ok" hand: thumb and index touch, other fingers extended. The geometry rejects it; the model's
+        // PINCH pose lets it drive the slider.
+        val ok = SyntheticHand.pose(Pose.OPEN_PALM, 0.5f, 0.6f).toMutableList()
+        val pinch = SyntheticHand.pose(Pose.PINCH, 0.5f, 0.6f)
+        for (i in listOf(HandLandmarks.THUMB_TIP, HandLandmarks.INDEX_TIP, HandLandmarks.INDEX_DIP)) ok[i] = pinch[i]
+        val slider = VolumeSlider()
+        var t = 0L
+        val steps = mutableListOf<Step>()
+        fun feed(lm: List<Landmark>, pose: HandPose, ms: Long) {
+            val end = t + ms
+            while (t < end) {
+                slider.update(t, lm, aspect, modelPinch = pose == HandPose.PINCH)?.let(steps::add); t += 33
+            }
+        }
+        feed(SyntheticHand.pose(Pose.OPEN_PALM, 0.5f, 0.6f), HandPose.OPEN_PALM, 200)
+        feed(ok, HandPose.PINCH, 400)
+        val dy = 1.2f * hand
+        for (k in 1..27) feed(ok.map { Landmark(it.x, it.y - dy * k / 27) }, HandPose.PINCH, 33)
+        feed(ok.map { Landmark(it.x, it.y - dy) }, HandPose.PINCH, 400)
+        assertEquals(List(4) { Step.UP }, steps)
+        // Without the model's answer the same hand is not a pinch.
+        assertFalse(PinchGeometry.isPinchHand(ok, 1.0f))
     }
 
     @Test

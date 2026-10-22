@@ -1,0 +1,40 @@
+{
+  "name": "pinch_mlp",
+  "version": "20261022-1847",
+  "norm": "norm-v1",
+  "input": 42,
+  "classes": [
+    "OTHER",
+    "PINCH"
+  ],
+  "thresholds": [
+    0.0,
+    0.5
+  ],
+  "test": {
+    "HaGRID annotations": {
+      "pinches": 4989,
+      "recall": 0.9989977951493285,
+      "negatives": 218806,
+      "false_positives": 0.0008637788726086122
+    },
+    "HaGRID our MediaPipe": {
+      "pinches": 108,
+      "recall": 1.0,
+      "negatives": 1775,
+      "false_positives": 0.0005633802816901409
+    },
+    "IPN clean (negatives)": {
+      "pinches": 0,
+      "recall": NaN,
+      "negatives": 41148,
+      "false_positives": 0.0004374453193350831
+    },
+    "IPN low light (negatives)": {
+      "pinches": 0,
+      "recall": NaN,
+      "negatives": 16089,
+      "false_positives": 0.0014295481384797065
+    }
+  }
+}

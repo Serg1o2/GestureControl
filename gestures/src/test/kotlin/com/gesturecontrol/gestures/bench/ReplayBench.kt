@@ -13,6 +13,7 @@ import com.gesturecontrol.gestures.GestureToggles
 import com.gesturecontrol.gestures.StabilityConfig
 import com.gesturecontrol.gestures.VolumeSliderConfig
 import com.gesturecontrol.gestures.ml.DenseMlp
+import com.gesturecontrol.gestures.ml.PinchDetector
 import com.gesturecontrol.gestures.ml.PoseClassifier
 import com.gesturecontrol.gestures.ml.RuleBasedPoseClassifier
 import com.gesturecontrol.gestures.ml.VotingPoseClassifier
@@ -175,6 +176,8 @@ val configs: Map<String, Pair<GestureConfig, PointerConfig>> by lazy {
             "vol_strict_speed_confirm250" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f, maxSpeed = 2f, stepConfirmMs = 250),
             "vol_strict_speed15_confirm250" to VolumeSliderConfig(maxClosingMs = 300, armMs = 300, deadZoneHandSizes = 0.25f, pinchClose = 0.22f, pinchOpen = 0.40f, maxSpeed = 1.5f, stepConfirmMs = 250),
             "vol_default" to VolumeSliderConfig(),
+            "vol_no_resting" to VolumeSliderConfig(restingArmMs = 0),
+            "vol_resting1000" to VolumeSliderConfig(restingArmMs = 1000),
             "vol_speed25" to VolumeSliderConfig(maxSpeed = 2.5f),
             "vol_speed2" to VolumeSliderConfig(maxSpeed = 2f),
             "vol_off" to VolumeSliderConfig(),
@@ -272,8 +275,8 @@ private fun replay(video: Video, fps: Int, classifierName: String, config: Pair<
     val frames = subsample(video.frames, fps)
     val (gestureConfig, pointerConfig) = config
 
-    // Gesture mode.
-    val engine = GestureEngine(gestureConfig, classifier(classifierName, gestureConfig))
+    // Gesture mode (with the pinch model, as in the app, when its weights are exported).
+    val engine = GestureEngine(gestureConfig, classifier(classifierName, gestureConfig), pinchDetector)
     val gestureEvents = frames.mapNotNull { engine.process(it) }
     // Cursor mode: the pointer engine owns pointing; finger flicks are off.
     val pointer = PointerEngine(pointerConfig, poseClassifier = classifier(classifierName, gestureConfig))
@@ -417,6 +420,14 @@ private val thresholds by lazy {
     val json = File("../app/src/main/assets/models/pose_mlp.json").readText()
     Regex("\"thresholds\"\\s*:\\s*\\[([^]]*)]").find(json)!!.groupValues[1]
         .split(',').map { it.trim().toFloat() }.toFloatArray()
+}
+
+/** JVM twin of the app's pinch model (ml/gc_ml/train_pinch.py), null if not exported. */
+private val pinchDetector: PinchDetector? by lazy {
+    val weights = ClassLoader.getSystemResource("ml/pinch_mlp_weights.txt") ?: return@lazy null
+    val meta = File("../app/src/main/assets/models/pinch_mlp.json").takeIf { it.exists() }?.readText() ?: return@lazy null
+    val threshold = Regex("\"thresholds\"\\s*:\\s*\\[([^]]*)]").find(meta)!!.groupValues[1].split(',')[1].trim().toFloat()
+    PinchDetector(DenseMlp.parse(weights.readText()), threshold)
 }
 
 private fun classifier(name: String, config: GestureConfig): PoseClassifier = when (name) {
