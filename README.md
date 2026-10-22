@@ -1,5 +1,16 @@
 # GestureControl
 
+> **English summary.** GestureControl is an Android app that lets you control your phone with hand gestures seen by the front camera. Everything runs on the device (MediaPipe Hand Landmarker + a small pose model); frames are never stored or sent anywhere.
+>
+> - **Media gestures:** swipe left / right to change tracks, hold an open palm or open a fist to pause / play, flick the index finger to swipe the screen.
+> - **Cursor mode:** point with the index finger to move an on-screen cursor, pinch to tap, two fingers to scroll; per-app screen zones with assignable actions.
+> - **Custom gestures:** record your own gestures (3–5 repeats) and bind them to actions.
+> - **Robustness:** protections against phantom triggers and a pose model fine-tuned on simulated low-light frames, both measured on the IPN Hand and HaGRIDv2 datasets ([docs/phantoms.md](docs/phantoms.md), [docs/lowlight.md](docs/lowlight.md)).
+> - **Stack:** Kotlin, Jetpack Compose (Material 3), CameraX, MediaPipe Tasks, LiteRT, Hilt, Room, DataStore; Python/TensorFlow training pipeline in [`ml/`](ml/).
+> - **Build:** JDK 17 and Android SDK 35, then `./gradlew assembleDebug`; gesture logic tests: `./gradlew :gestures:test`. Interface in Russian (default) and English.
+>
+> The rest of the documentation is in Russian. License: MIT for the code, CC BY-SA 4.0 / CC BY 4.0 for the trained models ([LICENSE-MODELS.md](LICENSE-MODELS.md)).
+
 Управление телефоном жестами руки через фронтальную камеру. Распознавание идёт полностью на устройстве (MediaPipe Hand Landmarker), без облака и без доступа в интернет.
 
 **Этап 1 (MVP):**
@@ -328,3 +339,7 @@ scripts/measure-power.sh active-hand 10           # 4) рука в кадре п
 ## Приватность
 
 См. [docs/privacy.md](docs/privacy.md). Видео не сохраняется и не покидает устройство. Разрешения `INTERNET` в приложении нет: его добавляет MediaPipe, и оно явно удалено в манифесте.
+
+## Лицензия
+
+Код — [MIT](LICENSE). Обученные модели получены из открытых датасетов и распространяются на их условиях: модель позы — CC BY-SA 4.0 (HaGRIDv2), динамическая модель — CC BY 4.0 (IPN Hand); подробности и атрибуция — в [LICENSE-MODELS.md](LICENSE-MODELS.md).
