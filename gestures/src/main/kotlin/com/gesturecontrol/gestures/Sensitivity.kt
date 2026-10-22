@@ -93,3 +93,28 @@ object SensitivityMapping {
 
     private fun scale(ms: Long, factor: Float): Long = (ms * factor).roundToLong()
 }
+
+/** Which main gestures are switched on (all by default). Custom gestures are not affected. */
+data class GestureToggles(
+    val swipe: Boolean = true,
+    val finger: Boolean = true,
+    val palmHold: Boolean = true,
+    val fistOpen: Boolean = true,
+    val pinch: Boolean = true,
+    val scroll: Boolean = true,
+) {
+    val disabledCount: Int get() = listOf(swipe, finger, palmHold, fistOpen, pinch, scroll).count { !it }
+
+    fun applyTo(config: GestureConfig): GestureConfig = config.copy(
+        disabled = buildSet {
+            addAll(config.disabled)
+            if (!swipe) addAll(listOf(Gesture.SWIPE_LEFT, Gesture.SWIPE_RIGHT))
+            if (!finger) addAll(listOf(Gesture.FINGER_LEFT, Gesture.FINGER_RIGHT))
+            if (!palmHold) add(Gesture.OPEN_PALM_HOLD)
+            if (!fistOpen) add(Gesture.FIST_OPEN)
+        },
+    )
+
+    fun applyTo(config: PointerConfig): PointerConfig =
+        config.copy(pinchEnabled = config.pinchEnabled && pinch, scrollEnabled = config.scrollEnabled && scroll)
+}

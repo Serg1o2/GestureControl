@@ -22,6 +22,8 @@ data class GestureConfig(
     /** Hand absence shorter than this is treated as a detector dropout, not as the hand leaving. */
     val handLostToleranceMs: Long = 150,
     val stability: StabilityConfig = StabilityConfig(),
+    /** Gestures switched off by the user: they never fire and never start a cooldown. */
+    val disabled: Set<Gesture> = emptySet(),
 )
 
 /**

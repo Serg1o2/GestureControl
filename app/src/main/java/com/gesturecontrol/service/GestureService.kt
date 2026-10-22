@@ -36,6 +36,7 @@ import com.gesturecontrol.gestures.custom.ActionSpec
 import com.gesturecontrol.gestures.custom.CustomGestureRecognizer
 import com.gesturecontrol.gestures.Gesture
 import com.gesturecontrol.gestures.GestureConfig
+import com.gesturecontrol.gestures.GestureToggles
 import com.gesturecontrol.gestures.Sensitivity
 import com.gesturecontrol.gestures.SensitivityMapping
 import com.gesturecontrol.gestures.GestureEngine
@@ -173,6 +174,7 @@ class GestureService : LifecycleService() {
         val deadZone: Float,
         val classifier: ClassifierKind,
         val sensitivity: Sensitivity,
+        val toggles: GestureToggles,
     )
 
     private suspend fun observeGate() {
@@ -186,8 +188,9 @@ class GestureService : LifecycleService() {
                 settings.pointerSettings,
                 settings.classifierKind,
                 settings.sensitivity,
-            ) { powerSave, pointer, kind, sensitivity ->
-                BindKey(powerSave, pointer.enabled, pointer.pressMode, pointer.deadZone, kind, sensitivity)
+                settings.gestureToggles,
+            ) { powerSave, pointer, kind, sensitivity, toggles ->
+                BindKey(powerSave, pointer.enabled, pointer.pressMode, pointer.deadZone, kind, sensitivity, toggles)
             },
         ) { debug, screenOn, foreground, selected, key ->
             val status = when {
@@ -267,7 +270,9 @@ class GestureService : LifecycleService() {
         classifiers = poseClassifiers
         val pointer = if (key.cursorEnabled) {
             PointerEngine(
-                SensitivityMapping.apply(PointerConfig(pressMode = key.pressMode, deadZone = key.deadZone), key.sensitivity),
+                key.toggles.applyTo(
+                    SensitivityMapping.apply(PointerConfig(pressMode = key.pressMode, deadZone = key.deadZone), key.sensitivity),
+                ),
                 screenAspect(),
                 poseClassifiers.forPointer,
             ).apply {
@@ -278,7 +283,10 @@ class GestureService : LifecycleService() {
             null
         }
         pointerEngine = pointer
-        val gestures = GestureEngine(SensitivityMapping.apply(GestureConfig(), key.sensitivity), poseClassifiers.forGestures)
+        val gestures = GestureEngine(
+            key.toggles.applyTo(SensitivityMapping.apply(GestureConfig(), key.sensitivity)),
+            poseClassifiers.forGestures,
+        )
         gestureEngine = gestures
         applyModeFlags()
         val analyzer = HandAnalyzer(

@@ -94,12 +94,16 @@ class DebugViewModel @Inject constructor(
             val poseClassifiers = withContext(Dispatchers.Default) { classifierFactory.create(settings.classifierKind.first()) }
             classifiers = poseClassifiers
             val sensitivity = settings.sensitivity.first()
+            val toggles = settings.gestureToggles.first()
             val pointer = PointerEngine(
-                SensitivityMapping.apply(pointerSettings.toConfig(), sensitivity),
+                toggles.applyTo(SensitivityMapping.apply(pointerSettings.toConfig(), sensitivity)),
                 poseClassifier = poseClassifiers.forPointer,
             )
                 .also { it.mapper = pointerSettings.mapper }
-            val gestures = GestureEngine(SensitivityMapping.apply(GestureConfig(), sensitivity), poseClassifiers.forGestures)
+            val gestures = GestureEngine(
+                toggles.applyTo(SensitivityMapping.apply(GestureConfig(), sensitivity)),
+                poseClassifiers.forGestures,
+            )
             val analyzer = HandAnalyzer(engine, gestures, throttler, pointer, onResult = ::onResult)
             camera.bind(owner, analyzer, rotation, surfaceProvider)
         }

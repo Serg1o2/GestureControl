@@ -6,6 +6,7 @@ import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.android.resources.Density
 import com.android.resources.NightMode
+import com.gesturecontrol.gestures.GestureToggles
 import com.gesturecontrol.service.ServiceStatus
 import com.gesturecontrol.ui.main.MainContent
 import com.gesturecontrol.ui.main.MainUiState
@@ -51,6 +52,8 @@ class MainScreenScreenshotTest {
         selectedCount = 3,
         classifier = ClassifierKind.MODEL,
         classifierStatus = ClassifierStatus(ClassifierKind.MODEL, ClassifierKind.MODEL, "20261022-1415"),
+        sensitivityChanged = 2,
+        toggles = GestureToggles(finger = false),
     )
 
     @Test

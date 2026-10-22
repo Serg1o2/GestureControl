@@ -58,6 +58,10 @@ data class PointerConfig(
     val pressCooldownMs: Long = 400,
 
     val scroll: ScrollConfig = ScrollConfig(),
+    /** Switched off by the user: a pinch never presses (the cursor still moves; dwell is unaffected). */
+    val pinchEnabled: Boolean = true,
+    /** Switched off by the user: two fingers never scroll. */
+    val scrollEnabled: Boolean = true,
     /** Tracking restarts on palm jumps; no press or scroll during the settle time (see [StabilityConfig]). */
     val stability: StabilityConfig = StabilityConfig(),
 )

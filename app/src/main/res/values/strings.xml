@@ -245,10 +245,10 @@
     <string name="action_hide">Hide</string>
 
     <!-- Gesture sensitivity -->
-    <string name="sens_title_short">Sensitivity</string>
-    <string name="sens_title">Gesture sensitivity</string>
+    <string name="sens_title_short">Gesture settings</string>
+    <string name="sens_title">Gesture settings</string>
     <string name="sens_reset">Reset</string>
-    <string name="sens_intro">Higher sensitivity catches smaller and slower movements, but the app also reacts more often to random hand motion. On test recordings, maximum sensitivity for all gestures gave about twice as many false triggers, minimum about half as many.</string>
+    <string name="sens_intro">Switch off the gestures you do not use: the app will not react to them at all. Higher sensitivity catches smaller and slower movements, but the app also reacts more often to random hand motion; on test recordings maximum sensitivity for all gestures gave about twice as many false triggers, minimum about half as many.</string>
     <string name="sens_swipe">Hand swipe</string>
     <string name="sens_swipe_desc">How long and fast the swipe must be</string>
     <string name="sens_finger">Finger flick</string>
@@ -270,6 +270,10 @@
     <string name="sens_level_high">Higher</string>
     <string name="sens_level_max">Maximum</string>
     <string name="sens_hint">Changes apply right away. Check them on the debug screen: it uses the same settings and shows the last recognized gesture.</string>
-    <string name="sens_open_desc_default">Standard for all gestures</string>
-    <string name="sens_open_desc_changed">Changed for %1$d of 6 gestures</string>
+    <string name="sens_open_desc_default">All gestures on, standard sensitivity</string>
+    <string name="sens_open_disabled">Off: %1$d</string>
+    <string name="sens_open_changed">sensitivity changed: %1$d</string>
+    <string name="sens_level_label">Sensitivity</string>
+    <string name="gesture_off_note">Off: the app does not react to this gesture</string>
+    <string name="gesture_off_chip">Off</string>
 </resources>

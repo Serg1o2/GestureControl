@@ -274,13 +274,15 @@ fun MainContent(
             }
 
             SectionCard(title = stringResource(R.string.main_gestures_section), icon = Icons.Rounded.ThumbUp) {
+                val on = state.toggles
                 val tiles = listOf(
-                    GestureTileData("👉", R.string.gesture_swipe_right_name, R.string.action_next_track),
-                    GestureTileData("👈", R.string.gesture_swipe_left_name, R.string.action_prev_track),
-                    GestureTileData("✋", R.string.gesture_palm_name, R.string.action_play_pause),
-                    GestureTileData("✊", R.string.gesture_fist_open_name, R.string.action_play_pause),
+                    GestureTileData("👉", R.string.gesture_swipe_right_name, R.string.action_next_track, on.swipe),
+                    GestureTileData("👈", R.string.gesture_swipe_left_name, R.string.action_prev_track, on.swipe),
+                    GestureTileData("✋", R.string.gesture_palm_name, R.string.action_play_pause, on.palmHold),
+                    GestureTileData("✊", R.string.gesture_fist_open_name, R.string.action_play_pause, on.fistOpen),
+                    GestureTileData("☝️", R.string.gesture_finger_name, R.string.action_screen_swipe, on.finger),
                 )
-                (tiles + GestureTileData("☝️", R.string.gesture_finger_name, R.string.action_screen_swipe)).forEach {
+                tiles.forEach {
                     GestureTile(it, Modifier.fillMaxWidth())
                 }
                 Text(
@@ -306,12 +308,17 @@ fun MainContent(
             }
 
             SectionCard(title = stringResource(R.string.settings_section), icon = Icons.Rounded.Settings) {
+                val off = state.toggles.disabledCount
+                val changed = state.sensitivityChanged
                 NavRow(
                     stringResource(R.string.sens_title),
-                    if (state.sensitivityChanged == 0) {
+                    if (off == 0 && changed == 0) {
                         stringResource(R.string.sens_open_desc_default)
                     } else {
-                        stringResource(R.string.sens_open_desc_changed, state.sensitivityChanged)
+                        listOfNotNull(
+                            if (off > 0) stringResource(R.string.sens_open_disabled, off) else null,
+                            if (changed > 0) stringResource(R.string.sens_open_changed, changed) else null,
+                        ).joinToString(" · ")
                     },
                     onOpenSensitivity,
                     emoji = "🎚️",
@@ -486,15 +493,18 @@ private fun SetupRow(
     }
 }
 
-private data class GestureTileData(val emoji: String, val name: Int, val action: Int)
+private data class GestureTileData(val emoji: String, val name: Int, val action: Int, val on: Boolean = true)
 
 @Composable
 private fun GestureTile(tile: GestureTileData, modifier: Modifier = Modifier) {
     Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.small) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 10.dp).alpha(if (tile.on) 1f else 0.45f),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             IconBadge(emoji = tile.emoji, container = LocalBrand.current.card)
             Spacer(Modifier.width(12.dp))
-            Column {
+            Column(Modifier.weight(1f)) {
                 Text(stringResource(tile.name), style = MaterialTheme.typography.labelLarge)
                 Text(
                     stringResource(tile.action),
@@ -502,6 +512,7 @@ private fun GestureTile(tile: GestureTileData, modifier: Modifier = Modifier) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            if (!tile.on) StatusChip(stringResource(R.string.gesture_off_chip), ok = false)
         }
     }
 }

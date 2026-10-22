@@ -116,7 +116,7 @@ class PointerEngine(
 
         if (pose == HandPose.TWO_FINGERS) {
             hideCursor()
-            if (!settled) {
+            if (!settled || !config.scrollEnabled) {
                 scroll.resetStroke()
                 return PointerOutput(null, pose, ratio, false, null, 0f, null)
             }
@@ -152,7 +152,7 @@ class PointerEngine(
         // A press needs settled tracking and a cursor shown for the arming time.
         val armed = settled && t - cursorSinceTs >= config.pinchArmMs
         val event = when (config.pressMode) {
-            PressMode.PINCH -> updatePinch(t, pinchCandidate && armed, ratio)
+            PressMode.PINCH -> if (config.pinchEnabled) updatePinch(t, pinchCandidate && armed, ratio) else null
             PressMode.DWELL -> null
         }
         val display = frozenCursor ?: cursor

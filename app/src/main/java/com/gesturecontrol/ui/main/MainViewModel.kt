@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gesturecontrol.data.SelectedAppsRepository
 import com.gesturecontrol.data.SettingsRepository
+import com.gesturecontrol.gestures.GestureToggles
 import com.gesturecontrol.service.GestureServiceState
 import com.gesturecontrol.service.ServiceStatus
 import com.gesturecontrol.vision.ClassifierKind
@@ -26,6 +27,7 @@ data class MainUiState(
     val classifierStatus: ClassifierStatus? = null,
     /** How many gestures have a non-default sensitivity. */
     val sensitivityChanged: Int = 0,
+    val toggles: GestureToggles = GestureToggles(),
 )
 
 @HiltViewModel
@@ -41,9 +43,17 @@ class MainViewModel @Inject constructor(
         selectedApps.selectedPackages,
         settings.powerSaveEnabled,
         settings.classifierKind,
-        combine(classifierFactory.status, settings.sensitivity) { classifierStatus, sensitivity -> classifierStatus to sensitivity },
-    ) { status, selected, powerSave, kind, (classifierStatus, sensitivity) ->
-        MainUiState(status, selected.size, powerSave, kind, classifierStatus.takeIf { it.requested == kind }, sensitivity.changedCount)
+        combine(classifierFactory.status, settings.sensitivity, settings.gestureToggles) { c, s, t -> Triple(c, s, t) },
+    ) { status, selected, powerSave, kind, (classifierStatus, sensitivity, toggles) ->
+        MainUiState(
+            status = status,
+            selectedCount = selected.size,
+            powerSave = powerSave,
+            classifier = kind,
+            classifierStatus = classifierStatus.takeIf { it.requested == kind },
+            sensitivityChanged = sensitivity.changedCount,
+            toggles = toggles,
+        )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
 
     fun setPowerSave(enabled: Boolean) {

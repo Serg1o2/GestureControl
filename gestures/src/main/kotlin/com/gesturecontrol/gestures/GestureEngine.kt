@@ -133,7 +133,7 @@ class GestureEngine(
             return null
         }
 
-        if (fistOpened) {
+        if (fistOpened && Gesture.FIST_OPEN !in config.disabled) {
             resetPalmHold()
             palmLatched = true
             return fire(Gesture.FIST_OPEN, t)
@@ -145,10 +145,11 @@ class GestureEngine(
             fingerDetector.update(t, tip.x * fingerX, tip.y, fingerScale)?.let { dir ->
                 val suppressed = lastFinger != null && dir != lastFinger &&
                     t - lastFingerTs < config.fingerSwipe.oppositeSuppressMs
-                if (!suppressed) {
+                val gesture = if (dir == SwipeDirection.RIGHT) Gesture.FINGER_RIGHT else Gesture.FINGER_LEFT
+                if (!suppressed && gesture !in config.disabled) {
                     lastFinger = dir
                     lastFingerTs = t
-                    return fire(if (dir == SwipeDirection.RIGHT) Gesture.FINGER_RIGHT else Gesture.FINGER_LEFT, t)
+                    return fire(gesture, t)
                 }
             }
             return updatePalmHold(t, good = false)
@@ -164,16 +165,16 @@ class GestureEngine(
         swipeDetector.update(t, sx * swipeX, sy, swipeScale, swipePose)?.let { dir ->
             val suppressed = lastSwipe != null && dir != lastSwipe &&
                 t - lastSwipeTs < config.swipe.oppositeSuppressMs
-            if (!suppressed) {
+            val gesture = if (dir == SwipeDirection.RIGHT) Gesture.SWIPE_RIGHT else Gesture.SWIPE_LEFT
+            if (!suppressed && gesture !in config.disabled) {
                 lastSwipe = dir
                 lastSwipeTs = t
                 resetPalmHold()
-                val gesture = if (dir == SwipeDirection.RIGHT) Gesture.SWIPE_RIGHT else Gesture.SWIPE_LEFT
                 return fire(gesture, t)
             }
         }
 
-        return updatePalmHold(t, isPalm && palmStill)
+        return updatePalmHold(t, isPalm && palmStill && Gesture.OPEN_PALM_HOLD !in config.disabled)
     }
 
     fun reset() {

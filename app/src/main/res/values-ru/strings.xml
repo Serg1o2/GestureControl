@@ -242,10 +242,10 @@
     <string name="action_hide">Скрыть</string>
 
     <!-- Gesture sensitivity -->
-    <string name="sens_title_short">Чувствительность</string>
-    <string name="sens_title">Чувствительность жестов</string>
+    <string name="sens_title_short">Настройка жестов</string>
+    <string name="sens_title">Настройка жестов</string>
     <string name="sens_reset">Сбросить</string>
-    <string name="sens_intro">Чем выше чувствительность, тем меньшие и более медленные движения засчитываются, но тем чаще приложение реагирует на случайные движения руки. На тестовых записях максимум для всех жестов давал примерно вдвое больше ложных срабатываний, минимум — примерно вдвое меньше.</string>
+    <string name="sens_intro">Выключите жесты, которыми не пользуетесь: приложение перестанет на них реагировать. Чем выше чувствительность, тем меньшие и более медленные движения засчитываются, но тем чаще приложение реагирует на случайные движения руки; на тестовых записях максимум для всех жестов давал примерно вдвое больше ложных срабатываний, минимум — примерно вдвое меньше.</string>
     <string name="sens_swipe">Свайп рукой</string>
     <string name="sens_swipe_desc">Насколько длинным и быстрым должен быть свайп</string>
     <string name="sens_finger">Взмах пальцем</string>
@@ -267,6 +267,10 @@
     <string name="sens_level_high">Выше</string>
     <string name="sens_level_max">Максимум</string>
     <string name="sens_hint">Изменения применяются сразу. Проверить их можно на экране отладки: он использует те же настройки и показывает последний распознанный жест.</string>
-    <string name="sens_open_desc_default">Стандартная для всех жестов</string>
-    <string name="sens_open_desc_changed">Изменена для %1$d из 6 жестов</string>
+    <string name="sens_open_desc_default">Все жесты включены, чувствительность стандартная</string>
+    <string name="sens_open_disabled">Выключено: %1$d</string>
+    <string name="sens_open_changed">чувствительность изменена: %1$d</string>
+    <string name="sens_level_label">Чувствительность</string>
+    <string name="gesture_off_note">Выключен: приложение не реагирует на этот жест</string>
+    <string name="gesture_off_chip">Выкл.</string>
 </resources>

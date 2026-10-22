@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.gesturecontrol.gestures.GestureToggles
 import com.gesturecontrol.gestures.Sensitivity
 import com.gesturecontrol.gestures.mapping.ScreenMapper
 import com.gesturecontrol.gestures.pointer.PointerConfig
@@ -103,6 +104,29 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         }
     }
 
+    /** Which main gestures are switched on. */
+    val gestureToggles: Flow<GestureToggles> = store.data.map { prefs ->
+        GestureToggles(
+            swipe = prefs[ON_SWIPE] ?: true,
+            finger = prefs[ON_FINGER] ?: true,
+            palmHold = prefs[ON_PALM] ?: true,
+            fistOpen = prefs[ON_FIST] ?: true,
+            pinch = prefs[ON_PINCH] ?: true,
+            scroll = prefs[ON_SCROLL] ?: true,
+        )
+    }
+
+    suspend fun setGestureToggles(value: GestureToggles) {
+        store.edit {
+            it[ON_SWIPE] = value.swipe
+            it[ON_FINGER] = value.finger
+            it[ON_PALM] = value.palmHold
+            it[ON_FIST] = value.fistOpen
+            it[ON_PINCH] = value.pinch
+            it[ON_SCROLL] = value.scroll
+        }
+    }
+
     /** Null resets to the default (uncalibrated) mapping. */
     suspend fun setCalibration(mapper: ScreenMapper?) {
         store.edit { if (mapper == null) it.remove(CALIBRATION) else it[CALIBRATION] = mapper.serialize() }
@@ -121,5 +145,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val SENS_FIST = intPreferencesKey("sens_fist_open")
         val SENS_PINCH = intPreferencesKey("sens_pinch")
         val SENS_SCROLL = intPreferencesKey("sens_scroll")
+        val ON_SWIPE = booleanPreferencesKey("gesture_on_swipe")
+        val ON_FINGER = booleanPreferencesKey("gesture_on_finger")
+        val ON_PALM = booleanPreferencesKey("gesture_on_palm_hold")
+        val ON_FIST = booleanPreferencesKey("gesture_on_fist_open")
+        val ON_PINCH = booleanPreferencesKey("gesture_on_pinch")
+        val ON_SCROLL = booleanPreferencesKey("gesture_on_scroll")
     }
 }
