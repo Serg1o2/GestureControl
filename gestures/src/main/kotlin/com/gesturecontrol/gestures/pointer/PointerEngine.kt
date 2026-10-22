@@ -3,11 +3,9 @@ package com.gesturecontrol.gestures.pointer
 import com.gesturecontrol.gestures.HandFrame
 import com.gesturecontrol.gestures.HandLandmarks as H
 import com.gesturecontrol.gestures.HandPose
-import com.gesturecontrol.gestures.Landmark
-import com.gesturecontrol.gestures.PalmConfig
+import com.gesturecontrol.gestures.PinchGeometry
 import com.gesturecontrol.gestures.StaticGestureClassifier
 import com.gesturecontrol.gestures.TrackingGuard
-import com.gesturecontrol.gestures.distance2d
 import com.gesturecontrol.gestures.isotropicHandSize
 import com.gesturecontrol.gestures.mapping.NormPoint
 import com.gesturecontrol.gestures.mapping.ScreenMapper
@@ -71,7 +69,6 @@ class PointerEngine(
     @Volatile
     var active: Boolean = true
 
-    private val classifier = StaticGestureClassifier(PalmConfig())
     private val smoother = CursorSmoother(config.filter, config.deadZone, screenAspect)
     private val scroll = ScrollDetector(config.scroll)
     private val history = ArrayDeque<Pair<Long, NormPoint>>()
@@ -128,8 +125,7 @@ class PointerEngine(
         }
         scroll.resetStroke()
 
-        val pinchCandidate = othersFolded(lm) && indexReach(lm) >= config.pinchMinIndexReach &&
-            ratio < config.pinchOpen
+        val pinchCandidate = PinchGeometry.isPinchHand(lm, config.pinchMinIndexReach) && ratio < config.pinchOpen
         val keepAlive = pose == HandPose.POINTING || (cursorActive && pinchCandidate)
         if (keepAlive) {
             lastPointerTs = t
@@ -243,16 +239,6 @@ class PointerEngine(
     /** Smoothed cursor at time [t] or the oldest one we still have. */
     private fun cursorAt(t: Long): NormPoint? =
         history.lastOrNull { it.first <= t }?.second ?: history.firstOrNull()?.second
-
-    private fun othersFolded(lm: List<Landmark>) =
-        !classifier.isFingerExtended(lm, H.MIDDLE_PIP, H.MIDDLE_TIP) &&
-            !classifier.isFingerExtended(lm, H.RING_PIP, H.RING_TIP) &&
-            !classifier.isFingerExtended(lm, H.PINKY_PIP, H.PINKY_TIP)
-
-    private fun indexReach(lm: List<Landmark>): Float {
-        val size = StaticGestureClassifier.handSize(lm)
-        return if (size <= 1e-6f) 0f else distance2d(lm[H.WRIST], lm[H.INDEX_TIP]) / size
-    }
 
     private fun hideCursor() {
         pinchLastOpenTs = Long.MIN_VALUE / 2
