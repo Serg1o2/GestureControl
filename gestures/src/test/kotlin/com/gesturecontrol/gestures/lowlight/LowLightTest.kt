@@ -42,3 +42,16 @@ class LowLightTest {
         assertEquals(64f / 255f, LowLight.meanLuma(grey, 16, 8), 1e-3f)
     }
 }
+
+class AeFpsRangeTest {
+    @Test
+    fun picksTheLowestRangeUpToThirtyWithoutGoingUnderFifteen() {
+        val ranges = listOf(7 to 30, 15 to 30, 20 to 30, 30 to 30, 15 to 15, 24 to 24)
+        assertEquals(15 to 30, AeFpsRange.choose(ranges))
+    }
+
+    @Test
+    fun keepsTheDefaultWhenNothingFits() {
+        assertEquals(null, AeFpsRange.choose(listOf(7 to 30, 30 to 30, 15 to 15)))
+    }
+}

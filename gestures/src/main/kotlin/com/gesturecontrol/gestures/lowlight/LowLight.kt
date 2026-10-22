@@ -65,3 +65,17 @@ object LowLight {
         }
     }
 }
+
+/**
+ * Auto-exposure frame-rate range for the analysis camera. Allowing the camera to slow down to
+ * [minFps] in the dark doubles the exposure time per frame (less sensor noise, see docs/lowlight.md);
+ * in good light auto-exposure still runs at [maxFps].
+ */
+object AeFpsRange {
+    /**
+     * Picks from the device's ranges (lower, upper) the one that tops out at [maxFps] and goes lowest
+     * without dropping under [minFps]. Null = keep the camera's default (nothing suitable).
+     */
+    fun choose(available: List<Pair<Int, Int>>, minFps: Int = 15, maxFps: Int = 30): Pair<Int, Int>? =
+        available.filter { (lo, hi) -> hi == maxFps && lo >= minFps && lo < hi }.minByOrNull { it.first }
+}
