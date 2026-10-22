@@ -14,6 +14,10 @@ enum class Gesture {
 
     /** Fist opened into a palm. */
     FIST_OPEN,
+
+    /** One volume step of the pinch slider (see [VolumeSlider]). */
+    VOLUME_UP,
+    VOLUME_DOWN,
 }
 
 data class GestureEvent(val gesture: Gesture, val timestampMs: Long)
@@ -27,6 +31,9 @@ sealed interface EngineState {
     /** Palm gesture fired; waiting for the palm to be released before it can fire again. */
     data object PalmLatched : EngineState
     data class Cooldown(val remainingMs: Long) : EngineState
+
+    /** Pinch volume slider active; [steps] = signed steps applied in this pinch. */
+    data class VolumeSliding(val steps: Int) : EngineState
 }
 
 /**
@@ -45,6 +52,9 @@ sealed interface EngineState {
  *   the opposite swipe is suppressed for [SwipeConfig.oppositeSuppressMs].
  * - Stability ([StabilityConfig]): a palm jump between detections restarts tracking as for a new
  *   hand, and nothing fires during the settle time after the hand appears.
+ * - Volume slider ([VolumeSlider], while [volumeSliderEnabled]): a still pinch arms it, vertical motion
+ *   emits VOLUME_UP / VOLUME_DOWN steps without the global cooldown; while it is active and for
+ *   [VolumeSliderConfig.afterReleaseSuppressMs] after the release nothing else fires.
  */
 class GestureEngine(
     private val config: GestureConfig = GestureConfig(),
@@ -55,6 +65,11 @@ class GestureEngine(
     private val swipeDetector = SwipeDetector(config.swipe)
     private val fingerDetector = SwipeDetector(config.fingerSwipe)
     private val palmTrajectory = Trajectory(config.palm.velocityWindowMs)
+    private val volumeSlider = VolumeSlider(config.volume)
+
+    /** Set from outside: off in apps with zones, where the pinch is the cursor's press. */
+    @Volatile
+    var volumeSliderEnabled: Boolean = true
 
     /** Set from outside (e.g. off in apps where the pointing finger drives the cursor). */
     @Volatile
@@ -121,6 +136,24 @@ class GestureEngine(
             resetPalmHold()
             fistStartTs = null
             state = EngineState.Tracking
+            return null
+        }
+
+        val sliderOn = volumeSliderEnabled && Gesture.VOLUME_UP !in config.disabled
+        if (!sliderOn) {
+            volumeSlider.reset()
+        } else if (volumeSlider.isActive || t >= cooldownUntil) {
+            val step = volumeSlider.update(t, lm, frame.aspect)
+            if (volumeSlider.isActive) {
+                suppressOtherGestures()
+                state = EngineState.VolumeSliding(volumeSlider.steps)
+                return step?.let { GestureEvent(if (it == VolumeSlider.Step.UP) Gesture.VOLUME_UP else Gesture.VOLUME_DOWN, t) }
+            }
+        }
+        if (sliderOn && volumeSlider.suppressing(t)) {
+            // The hand opening after the slider must not become a palm hold, a swipe or a fist opening.
+            suppressOtherGestures()
+            state = EngineState.Cooldown(config.volume.afterReleaseSuppressMs - (t - volumeSlider.releasedAtTs))
             return null
         }
 
@@ -256,12 +289,20 @@ class GestureEngine(
         return GestureEvent(gesture, t)
     }
 
+    private fun suppressOtherGestures() {
+        swipeDetector.reset()
+        fingerDetector.reset()
+        resetPalmHold()
+        fistStartTs = null
+    }
+
     private fun resetPalmHold() {
         palmStartTs = null
         palmLastGoodTs = Long.MIN_VALUE
     }
 
     private fun resetTracking() {
+        volumeSlider.reset()
         smoother.reset()
         swipeDetector.reset()
         fingerDetector.reset()

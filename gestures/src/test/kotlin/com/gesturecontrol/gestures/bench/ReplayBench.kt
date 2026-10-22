@@ -156,7 +156,7 @@ val configs: Map<String, Pair<GestureConfig, PointerConfig>> by lazy {
             ),
         // User sensitivity: the same level for every gesture (Sensitivity / SensitivityMapping).
         *(Sensitivity.MIN..Sensitivity.MAX).map { level ->
-            val sens = Sensitivity(level, level, level, level, level, level)
+            val sens = Sensitivity(level, level, level, level, level, level, level)
             "sens$level" to (SensitivityMapping.apply(base, sens) to SensitivityMapping.apply(basePointer, sens))
         }.toTypedArray(),
         "all" to (

@@ -22,9 +22,11 @@ data class Sensitivity(
     val pinch: Int = 0,
     /** Two-finger scroll: travel, speed and confirmation delay. */
     val scroll: Int = 0,
+    /** Pinch volume slider: travel per step, dead zone and arming time. */
+    val volume: Int = 0,
 ) {
     init {
-        for (level in listOf(swipe, finger, palmHold, fistOpen, pinch, scroll)) {
+        for (level in listOf(swipe, finger, palmHold, fistOpen, pinch, scroll, volume)) {
             require(level in MIN..MAX) { "Sensitivity level $level outside $MIN..$MAX" }
         }
     }
@@ -32,7 +34,7 @@ data class Sensitivity(
     val isDefault: Boolean get() = this == Sensitivity()
 
     /** Number of gestures whose sensitivity differs from the default. */
-    val changedCount: Int get() = listOf(swipe, finger, palmHold, fistOpen, pinch, scroll).count { it != 0 }
+    val changedCount: Int get() = listOf(swipe, finger, palmHold, fistOpen, pinch, scroll, volume).count { it != 0 }
 
     companion object {
         const val MIN = -2
@@ -53,7 +55,13 @@ object SensitivityMapping {
         val finger = Sensitivity.factor(s.finger)
         val palm = Sensitivity.factor(s.palmHold)
         val fist = Sensitivity.factor(s.fistOpen)
+        val volume = Sensitivity.factor(s.volume)
         return config.copy(
+            volume = config.volume.copy(
+                stepHandSizes = config.volume.stepHandSizes * volume,
+                deadZoneHandSizes = config.volume.deadZoneHandSizes * volume,
+                armMs = scale(config.volume.armMs, volume),
+            ),
             swipe = config.swipe.copy(
                 minDistance = config.swipe.minDistance * swipe,
                 minVelocity = config.swipe.minVelocity * swipe,
@@ -102,8 +110,9 @@ data class GestureToggles(
     val fistOpen: Boolean = true,
     val pinch: Boolean = true,
     val scroll: Boolean = true,
+    val volume: Boolean = true,
 ) {
-    val disabledCount: Int get() = listOf(swipe, finger, palmHold, fistOpen, pinch, scroll).count { !it }
+    val disabledCount: Int get() = listOf(swipe, finger, palmHold, fistOpen, pinch, scroll, volume).count { !it }
 
     fun applyTo(config: GestureConfig): GestureConfig = config.copy(
         disabled = buildSet {
@@ -112,6 +121,7 @@ data class GestureToggles(
             if (!finger) addAll(listOf(Gesture.FINGER_LEFT, Gesture.FINGER_RIGHT))
             if (!palmHold) add(Gesture.OPEN_PALM_HOLD)
             if (!fistOpen) add(Gesture.FIST_OPEN)
+            if (!volume) addAll(listOf(Gesture.VOLUME_UP, Gesture.VOLUME_DOWN))
         },
     )
 
