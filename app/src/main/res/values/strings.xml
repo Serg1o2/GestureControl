@@ -276,4 +276,15 @@
     <string name="sens_level_label">Sensitivity</string>
     <string name="gesture_off_note">Off: the app does not react to this gesture</string>
     <string name="gesture_off_chip">Off</string>
+
+    <!-- Pinch volume slider -->
+    <string name="gesture_volume_up">Volume up</string>
+    <string name="gesture_volume_down">Volume down</string>
+    <string name="state_volume">Volume slider: %1$s</string>
+    <string name="sens_volume">Volume by pinch</string>
+    <string name="sens_volume_desc">Pinch thumb and index, hold still for a moment, then move the hand smoothly up or down</string>
+    <string name="volume_only_playing">Only while music plays</string>
+    <string name="volume_only_playing_desc">Otherwise a pinch never changes the volume</string>
+    <string name="gesture_volume_name">Pinch, up / down</string>
+    <string name="action_volume">Music volume (apps without zones)</string>
 </resources>

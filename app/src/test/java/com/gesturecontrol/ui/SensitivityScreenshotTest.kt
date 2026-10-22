@@ -41,7 +41,7 @@ class SensitivityScreenshotTest {
     }
 
     private companion object {
-        val PAGES = listOf(0, 900, 1800, 2700)
+        val PAGES = listOf(0, 900, 1800, 2700, 3600)
 
         fun device(locale: String) = DeviceConfig.PIXEL_5.copy(
             screenWidth = 720, screenHeight = 1000, xdpi = 320, ydpi = 320, density = Density.XHIGH, locale = locale,

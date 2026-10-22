@@ -90,6 +90,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             fistOpen = level(SENS_FIST),
             pinch = level(SENS_PINCH),
             scroll = level(SENS_SCROLL),
+            volume = level(SENS_VOLUME),
         )
     }
 
@@ -101,12 +102,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             it[SENS_FIST] = value.fistOpen
             it[SENS_PINCH] = value.pinch
             it[SENS_SCROLL] = value.scroll
+            it[SENS_VOLUME] = value.volume
         }
     }
 
     /** Which main gestures are switched on. */
     val gestureToggles: Flow<GestureToggles> = store.data.map { prefs ->
         GestureToggles(
+            volume = prefs[ON_VOLUME] ?: true,
             swipe = prefs[ON_SWIPE] ?: true,
             finger = prefs[ON_FINGER] ?: true,
             palmHold = prefs[ON_PALM] ?: true,
@@ -124,7 +127,15 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             it[ON_FIST] = value.fistOpen
             it[ON_PINCH] = value.pinch
             it[ON_SCROLL] = value.scroll
+            it[ON_VOLUME] = value.volume
         }
+    }
+
+    /** The pinch volume slider changes the volume only while music is playing. */
+    val volumeOnlyWhenPlaying: Flow<Boolean> = store.data.map { it[VOLUME_ONLY_PLAYING] ?: true }
+
+    suspend fun setVolumeOnlyWhenPlaying(value: Boolean) {
+        store.edit { it[VOLUME_ONLY_PLAYING] = value }
     }
 
     /** Null resets to the default (uncalibrated) mapping. */
@@ -151,5 +162,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val ON_FIST = booleanPreferencesKey("gesture_on_fist_open")
         val ON_PINCH = booleanPreferencesKey("gesture_on_pinch")
         val ON_SCROLL = booleanPreferencesKey("gesture_on_scroll")
+        val ON_VOLUME = booleanPreferencesKey("gesture_on_volume")
+        val SENS_VOLUME = intPreferencesKey("sens_volume")
+        val VOLUME_ONLY_PLAYING = booleanPreferencesKey("volume_only_when_playing")
     }
 }

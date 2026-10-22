@@ -95,6 +95,7 @@ class DebugViewModel @Inject constructor(
             classifiers = poseClassifiers
             val sensitivity = settings.sensitivity.first()
             val toggles = settings.gestureToggles.first()
+            actionDispatcher.volumeOnlyWhenPlaying = settings.volumeOnlyWhenPlaying.first()
             val pointer = PointerEngine(
                 toggles.applyTo(SensitivityMapping.apply(pointerSettings.toConfig(), sensitivity)),
                 poseClassifier = poseClassifiers.forPointer,

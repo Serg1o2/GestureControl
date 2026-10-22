@@ -13,12 +13,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class GestureSettingsState(val sensitivity: Sensitivity = Sensitivity(), val toggles: GestureToggles = GestureToggles())
+data class GestureSettingsState(
+    val sensitivity: Sensitivity = Sensitivity(),
+    val toggles: GestureToggles = GestureToggles(),
+    val volumeOnlyWhenPlaying: Boolean = true,
+)
 
 @HiltViewModel
 class SensitivityViewModel @Inject constructor(private val settings: SettingsRepository) : ViewModel() {
     val state: StateFlow<GestureSettingsState> =
-        combine(settings.sensitivity, settings.gestureToggles, ::GestureSettingsState)
+        combine(settings.sensitivity, settings.gestureToggles, settings.volumeOnlyWhenPlaying, ::GestureSettingsState)
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), GestureSettingsState())
 
     /** Saved when the slider is released: the running service rebuilds its analyzer on every change. */
@@ -28,6 +32,10 @@ class SensitivityViewModel @Inject constructor(private val settings: SettingsRep
 
     fun setToggles(value: GestureToggles) {
         viewModelScope.launch { settings.setGestureToggles(value) }
+    }
+
+    fun setVolumeOnlyWhenPlaying(value: Boolean) {
+        viewModelScope.launch { settings.setVolumeOnlyWhenPlaying(value) }
     }
 
     /** Standard sensitivity and every gesture switched on. */

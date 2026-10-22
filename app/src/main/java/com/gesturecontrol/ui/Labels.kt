@@ -13,6 +13,7 @@ fun EngineState.label(): String = when (this) {
     is EngineState.PalmHolding -> stringResource(R.string.state_palm_holding, (progress * 100).toInt())
     EngineState.PalmLatched -> stringResource(R.string.state_palm_latched)
     is EngineState.Cooldown -> stringResource(R.string.state_cooldown)
+    is EngineState.VolumeSliding -> stringResource(R.string.state_volume, if (steps > 0) "+$steps" else "$steps")
 }
 
 @Composable
@@ -23,4 +24,6 @@ fun Gesture.label(): String = when (this) {
     Gesture.FINGER_LEFT -> stringResource(R.string.gesture_finger_left)
     Gesture.FINGER_RIGHT -> stringResource(R.string.gesture_finger_right)
     Gesture.FIST_OPEN -> stringResource(R.string.gesture_fist_open)
+    Gesture.VOLUME_UP -> stringResource(R.string.gesture_volume_up)
+    Gesture.VOLUME_DOWN -> stringResource(R.string.gesture_volume_down)
 }

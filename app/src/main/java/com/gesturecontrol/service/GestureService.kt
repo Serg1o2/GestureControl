@@ -34,6 +34,7 @@ import com.gesturecontrol.data.toTemplate
 import com.gesturecontrol.actions.ActionExecutor
 import com.gesturecontrol.gestures.custom.ActionSpec
 import com.gesturecontrol.gestures.custom.CustomGestureRecognizer
+import com.gesturecontrol.gestures.EngineState
 import com.gesturecontrol.gestures.Gesture
 import com.gesturecontrol.gestures.GestureConfig
 import com.gesturecontrol.gestures.GestureToggles
@@ -145,6 +146,7 @@ class GestureService : LifecycleService() {
         }
         if (gateJob == null) {
             gateJob = lifecycleScope.launch { observeGate() }
+            lifecycleScope.launch { settings.volumeOnlyWhenPlaying.collect { actionDispatcher.volumeOnlyWhenPlaying = it } }
             lifecycleScope.launch { observePointerInputs() }
             lifecycleScope.launch { observeCustomGestures() }
         }
@@ -246,6 +248,8 @@ class GestureService : LifecycleService() {
             it.active = cursorApp
         }
         gestureEngine?.fingerSwipesEnabled = !cursorApp
+        // In apps with zones the pinch is the cursor's press.
+        gestureEngine?.volumeSliderEnabled = !cursorApp
         if (!cursorApp) bridge.overlay.value = OverlayState()
     }
 
@@ -307,7 +311,8 @@ class GestureService : LifecycleService() {
 
     /** Called on the analysis thread. */
     private fun onAnalysisResult(result: AnalysisResult) {
-        if (customRecognizer.templates.isNotEmpty()) {
+        // Custom gestures do not see the hand while it drives the volume slider.
+        if (customRecognizer.templates.isNotEmpty() && result.state !is EngineState.VolumeSliding) {
             customRecognizer.process(result.frame)?.let { match ->
                 customActions[match.template.id]?.let(actionExecutor::execute)
             }

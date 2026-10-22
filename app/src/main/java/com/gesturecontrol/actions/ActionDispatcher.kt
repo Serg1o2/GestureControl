@@ -23,10 +23,28 @@ class ActionDispatcher @Inject constructor(@ApplicationContext context: Context)
         // FINGER_LEFT / FINGER_RIGHT are touch swipes on the screen, performed by the gesture service.
     )
 
+    /** Volume steps of the pinch slider are ignored while no music plays (setting, on by default). */
+    @Volatile
+    var volumeOnlyWhenPlaying: Boolean = true
+
     fun dispatch(gesture: Gesture) {
+        if (gesture == Gesture.VOLUME_UP || gesture == Gesture.VOLUME_DOWN) {
+            adjustVolume(up = gesture == Gesture.VOLUME_UP)
+            return
+        }
         val action = bindings[gesture] ?: return
         Log.d(TAG, "$gesture -> $action")
         action.perform()
+    }
+
+    /** One step of the music volume, with the system volume panel as feedback. */
+    private fun adjustVolume(up: Boolean) {
+        if (volumeOnlyWhenPlaying && !audioManager.isMusicActive) {
+            Log.d(TAG, "volume step ignored: no music playing")
+            return
+        }
+        val direction = if (up) AudioManager.ADJUST_RAISE else AudioManager.ADJUST_LOWER
+        audioManager.adjustStreamVolume(AudioManager.STREAM_MUSIC, direction, AudioManager.FLAG_SHOW_UI)
     }
 
     /** Media action assigned to a screen zone. */

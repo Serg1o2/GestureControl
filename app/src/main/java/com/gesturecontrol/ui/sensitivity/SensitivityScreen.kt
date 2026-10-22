@@ -45,6 +45,7 @@ import com.gesturecontrol.gestures.SensitivityMapping
 import com.gesturecontrol.ui.components.AppTopBar
 import com.gesturecontrol.ui.components.IconBadge
 import com.gesturecontrol.ui.components.StatusChip
+import com.gesturecontrol.ui.components.SwitchRow
 import com.gesturecontrol.ui.theme.LocalBrand
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -59,6 +60,8 @@ fun SensitivityScreen(onBack: () -> Unit, viewModel: SensitivityViewModel = hilt
         onChange = viewModel::setSensitivity,
         onToggle = viewModel::setToggles,
         onReset = viewModel::reset,
+        volumeOnlyWhenPlaying = state.volumeOnlyWhenPlaying,
+        onVolumeOnlyWhenPlaying = viewModel::setVolumeOnlyWhenPlaying,
     )
 }
 
@@ -98,6 +101,10 @@ private val ROWS = listOf(
         "✌️", R.string.sens_scroll, R.string.sens_scroll_desc,
         { it.scroll }, { s, l -> s.copy(scroll = l) }, { it.scroll }, { t, v -> t.copy(scroll = v) },
     ),
+    GestureRow(
+        "🔊", R.string.sens_volume, R.string.sens_volume_desc,
+        { it.volume }, { s, l -> s.copy(volume = l) }, { it.volume }, { t, v -> t.copy(volume = v) },
+    ),
 )
 
 /** The screen without the view model (also rendered by screenshot tests). */
@@ -109,6 +116,8 @@ fun SensitivityContent(
     onChange: (Sensitivity) -> Unit,
     onToggle: (GestureToggles) -> Unit,
     onReset: () -> Unit,
+    volumeOnlyWhenPlaying: Boolean = true,
+    onVolumeOnlyWhenPlaying: (Boolean) -> Unit = {},
     scrollState: ScrollState = rememberScrollState(),
 ) {
     Scaffold(
@@ -154,6 +163,18 @@ fun SensitivityContent(
                     detail = detail,
                     onLevel = { onChange(row.withLevel(sensitivity, it)) },
                     onOn = { onToggle(row.withOn(toggles, it)) },
+                    extra = if (row.title == R.string.sens_volume) {
+                        {
+                            SwitchRow(
+                                title = stringResource(R.string.volume_only_playing),
+                                description = stringResource(R.string.volume_only_playing_desc),
+                                checked = volumeOnlyWhenPlaying,
+                                onCheckedChange = onVolumeOnlyWhenPlaying,
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 )
             }
             Text(
@@ -167,7 +188,15 @@ fun SensitivityContent(
 }
 
 @Composable
-private fun GestureCard(row: GestureRow, level: Int, on: Boolean, detail: String?, onLevel: (Int) -> Unit, onOn: (Boolean) -> Unit) {
+private fun GestureCard(
+    row: GestureRow,
+    level: Int,
+    on: Boolean,
+    detail: String?,
+    onLevel: (Int) -> Unit,
+    onOn: (Boolean) -> Unit,
+    extra: (@Composable () -> Unit)? = null,
+) {
     // The slider moves freely; the level is saved when it is released.
     var position by remember(level) { mutableFloatStateOf(level.toFloat()) }
     val shown = position.roundToInt()
@@ -226,6 +255,10 @@ private fun GestureCard(row: GestureRow, level: Int, on: Boolean, detail: String
                     }
                     if (detail != null) {
                         Text(detail, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    }
+                    if (extra != null) {
+                        Spacer(Modifier.padding(top = 8.dp))
+                        extra()
                     }
                 }
             }

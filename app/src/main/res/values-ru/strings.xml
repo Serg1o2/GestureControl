@@ -273,4 +273,15 @@
     <string name="sens_level_label">Чувствительность</string>
     <string name="gesture_off_note">Выключен: приложение не реагирует на этот жест</string>
     <string name="gesture_off_chip">Выкл.</string>
+
+    <!-- Pinch volume slider -->
+    <string name="gesture_volume_up">Громче</string>
+    <string name="gesture_volume_down">Тише</string>
+    <string name="state_volume">Ползунок громкости: %1$s</string>
+    <string name="sens_volume">Громкость щипком</string>
+    <string name="sens_volume_desc">Сведите большой и указательный, задержите и плавно ведите руку вверх или вниз</string>
+    <string name="volume_only_playing">Только когда играет музыка</string>
+    <string name="volume_only_playing_desc">Иначе щипок не меняет громкость</string>
+    <string name="gesture_volume_name">Щипок, вверх / вниз</string>
+    <string name="action_volume">Громкость музыки (в приложениях без зон)</string>
 </resources>

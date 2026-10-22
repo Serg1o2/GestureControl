@@ -281,6 +281,7 @@ fun MainContent(
                     GestureTileData("✋", R.string.gesture_palm_name, R.string.action_play_pause, on.palmHold),
                     GestureTileData("✊", R.string.gesture_fist_open_name, R.string.action_play_pause, on.fistOpen),
                     GestureTileData("☝️", R.string.gesture_finger_name, R.string.action_screen_swipe, on.finger),
+                    GestureTileData("🔊", R.string.gesture_volume_name, R.string.action_volume, on.volume),
                 )
                 tiles.forEach {
                     GestureTile(it, Modifier.fillMaxWidth())
