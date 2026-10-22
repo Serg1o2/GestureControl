@@ -62,8 +62,14 @@ def main() -> None:
     mine = FEAT / "static_mine.npz"
     if mine.exists():
         static_inputs.append(str(mine))
+    # Low-light pairs (teacher labels from clean IPN frames, see gc_ml/dark_pairs.py and docs/lowlight.md):
+    # python -m gc_ml.lowlight run --split train/test ... && python -m gc_ml.dark_pairs build
+    dark = FEAT / "static_ipn_dark.npz"
+    if dark.exists():
+        static_inputs.append(str(dark))
     if needed("train-static", ML / "artifacts" / "static" / "pose_mlp.tflite"):
-        run(PY_TRAIN, "gc_ml.train_static", "--features", *static_inputs, "--epochs", "3" if pilot else "25")
+        run(PY_TRAIN, "gc_ml.train_static", "--features", *static_inputs, "--epochs", "3" if pilot else "25",
+            "--oversample-dark", "5")
 
     # 4. Dynamic data and model (IPN Hand).
     if not args.skip_dynamic:

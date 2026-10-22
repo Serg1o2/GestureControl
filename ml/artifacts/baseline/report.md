@@ -34,16 +34,16 @@ Confusion matrix (rows = true, columns = predicted):
 ### pose_mlp (quantized TFLite, thresholds)
 
 - samples: 680
-- accuracy: **92.35%**
+- accuracy: **92.65%**
 - accuracy on gesture classes (without OTHER): **81.67%**
-- background false positives per frame (OTHER predicted as a gesture): **1.82%**
+- background false positives per frame (OTHER predicted as a gesture): **1.36%**
 
 | class | recall | precision |
 |---|---|---|
-| OTHER | 98.2% | 90.8% |
-| OPEN_PALM | 96.7% | 95.1% |
+| OTHER | 98.6% | 90.8% |
+| OPEN_PALM | 96.7% | 96.7% |
 | FIST | 80.0% | 94.1% |
-| POINTING | 75.0% | 96.8% |
+| POINTING | 75.0% | 100.0% |
 | TWO_FINGERS | 77.5% | 98.4% |
 | THUMB_UP | 70.0% | 87.5% |
 | THUMB_DOWN | 80.0% | 100.0% |
@@ -52,7 +52,7 @@ Confusion matrix (rows = true, columns = predicted):
 
 | | OTHER | OPEN_PALM | FIST | POINTING | TWO_FINGERS | THUMB_UP | THUMB_DOWN |
 |---|---|---|---|---|---|---|---|
-| **OTHER** | 432 | 3 | 1 | 1 | 1 | 2 | 0 |
+| **OTHER** | 434 | 2 | 1 | 0 | 1 | 2 | 0 |
 | **OPEN_PALM** | 2 | 58 | 0 | 0 | 0 | 0 | 0 |
 | **FIST** | 4 | 0 | 16 | 0 | 0 | 0 | 0 |
 | **POINTING** | 10 | 0 | 0 | 30 | 0 | 0 | 0 |

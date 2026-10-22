@@ -2,22 +2,22 @@
   "goals": [
     {
       "goal": "Static poses, accuracy ≥ 95%: HaGRID test (annotation landmarks)",
-      "value": "99.08%",
+      "value": "99.14%",
       "status": "✅"
     },
     {
       "goal": "Background false positives ≤ 2% per frame: HaGRID test (annotation landmarks)",
-      "value": "0.70%",
+      "value": "0.64%",
       "status": "✅"
     },
     {
       "goal": "Static poses, accuracy ≥ 95%: HaGRID test (our MediaPipe, true aspect)",
-      "value": "98.31%",
+      "value": "98.68%",
       "status": "✅"
     },
     {
       "goal": "Background false positives ≤ 2% per frame: HaGRID test (our MediaPipe, true aspect)",
-      "value": "1.40%",
+      "value": "0.89%",
       "status": "✅"
     },
     {

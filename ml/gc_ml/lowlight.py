@@ -123,9 +123,9 @@ def enhance(rgb: np.ndarray, how: str) -> np.ndarray:
 
 def _job(args) -> list[dict]:
     """One video, one darkness level: the degraded frame goes through every enhancement."""
-    video_path, level, model_path, out_dir = args
+    video_path, level, model_path, out_dir, variants = args
     stem = Path(video_path).stem
-    todo = [how for how in ENHANCE if not (Path(out_dir) / f"{level}_{how}" / f"{stem}.npz").exists()]
+    todo = [how for how in variants if not (Path(out_dir) / f"{level}_{how}" / f"{stem}.npz").exists()]
     if not todo:
         return [{"video": stem, "level": level, "skipped": True}]
     import cv2
@@ -211,10 +211,11 @@ def pick_videos(n: int, split: str = "test") -> list[Path]:
     return [VIDEOS / f"{v}.avi" for v in picked]
 
 
-def run(n_videos: int, workers: int, only: list[str] | None, split: str = "test") -> None:
+def run(n_videos: int, workers: int, only: list[str] | None, split: str = "test", variants: list[str] | None = None) -> None:
     model = ROOT.parent / "app" / "src" / "main" / "assets" / "hand_landmarker.task"
     levels = only or list(LEVELS)
-    jobs = [(str(v), lvl, str(model), str(OUT)) for v in pick_videos(n_videos, split) for lvl in levels]
+    variants = variants or ENHANCE
+    jobs = [(str(v), lvl, str(model), str(OUT), variants) for v in pick_videos(n_videos, split) for lvl in levels]
     with ProcessPoolExecutor(workers) as pool:
         for i, fut in enumerate(as_completed([pool.submit(_job, j) for j in jobs]), 1):
             print(f"[{i}/{len(jobs)}] {fut.result()}", flush=True)
@@ -336,10 +337,11 @@ def main() -> None:
     r.add_argument("--workers", type=int, default=10)
     r.add_argument("--only", nargs="*", help="darkness levels (default: all)")
     r.add_argument("--split", choices=["test", "train"], default="test")
+    r.add_argument("--variants", nargs="*", help="enhancement variants (default: all)")
     sub.add_parser("report")
     args = ap.parse_args()
     if args.cmd == "run":
-        run(args.videos, args.workers, args.only, args.split)
+        run(args.videos, args.workers, args.only, args.split, args.variants)
     else:
         report()
 

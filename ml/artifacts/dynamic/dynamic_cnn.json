@@ -1,6 +1,6 @@
 {
   "name": "dynamic_cnn",
-  "version": "20261022-0122",
+  "version": "20261022-1334",
   "norm": "norm-v1",
   "window": 24,
   "frame_features": 45,
@@ -12,6 +12,6 @@
     "SWIPE_DOWN",
     "FIST_OPEN"
   ],
-  "best_val_balanced_acc": 0.799477597456795,
-  "test_accuracy": 0.8205744822979292
+  "best_val_balanced_acc": 0.8409044420979371,
+  "test_accuracy": 0.8554899484624049
 }

@@ -1,6 +1,6 @@
 {
   "name": "pose_mlp",
-  "version": "20261022-0057",
+  "version": "20261022-1415",
   "norm": "norm-v1",
   "input": 42,
   "classes": [
@@ -14,16 +14,16 @@
   ],
   "thresholds": [
     0.0,
-    0.89,
+    0.87,
     0.5,
-    0.92,
-    0.5,
+    0.95,
+    0.8,
     0.5,
     0.5
   ],
-  "test_accuracy_quant": 0.9871702975535247,
+  "test_accuracy_quant": 0.9845738169635667,
   "train_info": {
-    "best_val_acc": 0.9799724088138788,
+    "best_val_acc": 0.9643758101571496,
     "epochs": 25,
     "seed": 42
   }

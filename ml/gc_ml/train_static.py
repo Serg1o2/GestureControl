@@ -2,7 +2,7 @@
 
 Input: data/features/static_*.npz with
   x (N, 42) normalized shapes, y (N,) POSE_CLASSES index, split (N,) 0=train 1=val 2=test,
-  source (N,) dataset id (0=hagrid annotations, 1=hagrid re-extracted, 2=mine).
+  source (N,) dataset id (0=hagrid annotations, 1=hagrid re-extracted, 2=mine, 3=IPN low light).
 """
 
 from __future__ import annotations
@@ -56,7 +56,8 @@ def batches(x, y, batch, rng, augment):
         yield xb, y[b]
 
 
-def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 1024, oversample: int = 5) -> dict:
+def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 1024, oversample: int = 5,
+          oversample_dark: int = 1) -> dict:
     import tensorflow as tf
 
     tf.keras.utils.set_random_seed(SEED)
@@ -65,9 +66,11 @@ def train(data: dict[str, np.ndarray], out_dir: Path, epochs: int, batch: int = 
     tr = data["split"] == 0
     va = data["split"] == 1
     # Landmarks from our MediaPipe version (sources 1, 2) match the app best: repeat them `oversample` times.
+    # The low-light rows (source 3) are correlated video frames: their own repeat factor.
     tr_idx = np.where(tr)[0]
-    own = tr_idx[data["source"][tr_idx] > 0]
-    tr_idx = np.concatenate([tr_idx] + [own] * (oversample - 1))
+    own = tr_idx[np.isin(data["source"][tr_idx], [1, 2])]
+    dark = tr_idx[data["source"][tr_idx] == 3]
+    tr_idx = np.concatenate([tr_idx] + [own] * (oversample - 1) + [dark] * (oversample_dark - 1))
     xtr, ytr = data["x"][tr_idx], data["y"][tr_idx]
     xva, yva = data["x"][va], data["y"][va]
     own_va = data["source"][va] > 0
@@ -154,11 +157,12 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=ROOT / "artifacts" / "static")
     ap.add_argument("--epochs", type=int, default=25)
     ap.add_argument("--oversample", type=int, default=5, help="repeat factor for our-MediaPipe and own samples")
+    ap.add_argument("--oversample-dark", type=int, default=1, help="repeat factor for the low-light rows (source 3)")
     ap.add_argument("--report", type=Path, default=ROOT / "artifacts" / "static" / "report.md")
     args = ap.parse_args()
 
     data = load(args.features)
-    info = train(data, args.out, args.epochs, oversample=args.oversample)
+    info = train(data, args.out, args.epochs, oversample=args.oversample, oversample_dark=args.oversample_dark)
 
     import tensorflow as tf
 
@@ -170,7 +174,8 @@ def main() -> None:
 
     md = ["## Static pose model (Keras, test split by person)", ""]
     thresholded: dict = {}
-    for src, name in [(None, "all test"), (0, "HaGRID annotations"), (1, "HaGRID re-extracted (our MediaPipe)"), (2, "my recordings")]:
+    for src, name in [(None, "all test"), (0, "HaGRID annotations"), (1, "HaGRID re-extracted (our MediaPipe)"), (2, "my recordings"),
+                      (3, "IPN low light (teacher labels from clean frames)")]:
         mask = np.ones(te.sum(), bool) if src is None else data["source"][te] == src
         if mask.sum() == 0:
             continue
