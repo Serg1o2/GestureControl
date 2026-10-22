@@ -2,5 +2,25 @@
   "hagrid/annotations.zip": {
     "sha256": "ca27a177cc9f061e92d59f6a7d9b1b10fe2ee8289ab5f2068cde6ab197d2a286",
     "size": 719041314
+  },
+  "ipn/videos_tgz/videos01.tgz": {
+    "sha256": "9204fdc4573142d1fe9c44e45c8a2ea77c80f16a22a6d90e982e6dfd671dae1d",
+    "size": 974589222
+  },
+  "ipn/videos_tgz/videos02.tgz": {
+    "sha256": "1f89397f7d95a910d1e58288c523d09b5c25ae7c8359b5770fabb626541d2e8d",
+    "size": 1025728253
+  },
+  "ipn/videos_tgz/videos03.tgz": {
+    "sha256": "f4de375efcfebee055963d27e781e5d6c2835231fe40d27fa8a2c1d34ca5273a",
+    "size": 1072218074
+  },
+  "ipn/videos_tgz/videos04.tgz": {
+    "sha256": "7fe8dfcfb4c89ae531e4ef7d90fb1f102b75aeabc18a68884c4dafe4dd3de461",
+    "size": 938066398
+  },
+  "ipn/videos_tgz/videos05.tgz": {
+    "sha256": "8f9fe6d66d9cc49d86bf0f618b52f122c6106ab33328413861aa5732df1ecde1",
+    "size": 933117579
   }
 }
