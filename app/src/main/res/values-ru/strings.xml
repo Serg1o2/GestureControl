@@ -240,4 +240,33 @@
     <string name="setup_all_done">Всё готово: доступы выданы</string>
     <string name="action_show">Показать</string>
     <string name="action_hide">Скрыть</string>
+
+    <!-- Gesture sensitivity -->
+    <string name="sens_title_short">Чувствительность</string>
+    <string name="sens_title">Чувствительность жестов</string>
+    <string name="sens_reset">Сбросить</string>
+    <string name="sens_intro">Чем выше чувствительность, тем меньшие и более медленные движения засчитываются, но тем чаще приложение реагирует на случайные движения руки. На тестовых записях максимум для всех жестов давал примерно вдвое больше ложных срабатываний, минимум — примерно вдвое меньше.</string>
+    <string name="sens_swipe">Свайп рукой</string>
+    <string name="sens_swipe_desc">Насколько длинным и быстрым должен быть свайп</string>
+    <string name="sens_finger">Взмах пальцем</string>
+    <string name="sens_finger_desc">Длина и скорость взмаха указательным пальцем</string>
+    <string name="sens_palm">Ладонь</string>
+    <string name="sens_palm_desc">Сколько держать ладонь и насколько неподвижно</string>
+    <string name="sens_palm_value">Время удержания: %1$s с</string>
+    <string name="sens_fist">Разжатие кулака</string>
+    <string name="sens_fist_desc">Сколько показывать кулак и как быстро разжать</string>
+    <string name="sens_pinch">Щипок (нажатие)</string>
+    <string name="sens_pinch_desc">Насколько близко и быстро свести большой и указательный</string>
+    <string name="sens_scroll">Прокрутка двумя пальцами</string>
+    <string name="sens_scroll_desc">Длина движения и задержка подтверждения</string>
+    <string name="sens_less">Меньше ложных</string>
+    <string name="sens_more">Срабатывает легче</string>
+    <string name="sens_level_min">Минимум</string>
+    <string name="sens_level_low">Ниже</string>
+    <string name="sens_level_default">Стандарт</string>
+    <string name="sens_level_high">Выше</string>
+    <string name="sens_level_max">Максимум</string>
+    <string name="sens_hint">Изменения применяются сразу. Проверить их можно на экране отладки: он использует те же настройки и показывает последний распознанный жест.</string>
+    <string name="sens_open_desc_default">Стандартная для всех жестов</string>
+    <string name="sens_open_desc_changed">Изменена для %1$d из 6 жестов</string>
 </resources>

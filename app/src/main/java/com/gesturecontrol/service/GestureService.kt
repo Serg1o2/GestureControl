@@ -36,6 +36,8 @@ import com.gesturecontrol.gestures.custom.ActionSpec
 import com.gesturecontrol.gestures.custom.CustomGestureRecognizer
 import com.gesturecontrol.gestures.Gesture
 import com.gesturecontrol.gestures.GestureConfig
+import com.gesturecontrol.gestures.Sensitivity
+import com.gesturecontrol.gestures.SensitivityMapping
 import com.gesturecontrol.gestures.GestureEngine
 import com.gesturecontrol.gestures.PowerSaveConfig
 import com.gesturecontrol.gestures.PowerSaveThrottler
@@ -170,6 +172,7 @@ class GestureService : LifecycleService() {
         val pressMode: PressMode,
         val deadZone: Float,
         val classifier: ClassifierKind,
+        val sensitivity: Sensitivity,
     )
 
     private suspend fun observeGate() {
@@ -178,8 +181,13 @@ class GestureService : LifecycleService() {
             screenOnFlow(this),
             foregroundApps.foregroundPackage,
             selectedApps.selectedPackages,
-            combine(settings.powerSaveEnabled, settings.pointerSettings, settings.classifierKind) { powerSave, pointer, kind ->
-                BindKey(powerSave, pointer.enabled, pointer.pressMode, pointer.deadZone, kind)
+            combine(
+                settings.powerSaveEnabled,
+                settings.pointerSettings,
+                settings.classifierKind,
+                settings.sensitivity,
+            ) { powerSave, pointer, kind, sensitivity ->
+                BindKey(powerSave, pointer.enabled, pointer.pressMode, pointer.deadZone, kind, sensitivity)
             },
         ) { debug, screenOn, foreground, selected, key ->
             val status = when {
@@ -259,7 +267,7 @@ class GestureService : LifecycleService() {
         classifiers = poseClassifiers
         val pointer = if (key.cursorEnabled) {
             PointerEngine(
-                PointerConfig(pressMode = key.pressMode, deadZone = key.deadZone),
+                SensitivityMapping.apply(PointerConfig(pressMode = key.pressMode, deadZone = key.deadZone), key.sensitivity),
                 screenAspect(),
                 poseClassifiers.forPointer,
             ).apply {
@@ -270,7 +278,7 @@ class GestureService : LifecycleService() {
             null
         }
         pointerEngine = pointer
-        val gestures = GestureEngine(GestureConfig(), poseClassifiers.forGestures)
+        val gestures = GestureEngine(SensitivityMapping.apply(GestureConfig(), key.sensitivity), poseClassifiers.forGestures)
         gestureEngine = gestures
         applyModeFlags()
         val analyzer = HandAnalyzer(

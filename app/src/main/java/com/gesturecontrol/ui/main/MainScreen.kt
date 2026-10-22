@@ -101,6 +101,7 @@ fun MainScreen(
     onOpenZones: () -> Unit,
     onOpenCursorSettings: () -> Unit,
     onOpenCustom: () -> Unit,
+    onOpenSensitivity: () -> Unit,
     viewModel: MainViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -145,6 +146,7 @@ fun MainScreen(
         onOpenCursorSettings = onOpenCursorSettings,
         onOpenCustom = onOpenCustom,
         onOpenDebug = onOpenDebug,
+        onOpenSensitivity = onOpenSensitivity,
         onPowerSaveChange = viewModel::setPowerSave,
         onUseModelChange = viewModel::setUseModel,
     )
@@ -168,6 +170,7 @@ fun MainContent(
     onOpenCursorSettings: () -> Unit,
     onOpenCustom: () -> Unit,
     onOpenDebug: () -> Unit,
+    onOpenSensitivity: () -> Unit,
     onPowerSaveChange: (Boolean) -> Unit,
     onUseModelChange: (Boolean) -> Unit,
     scrollState: ScrollState = rememberScrollState(),
@@ -303,6 +306,16 @@ fun MainContent(
             }
 
             SectionCard(title = stringResource(R.string.settings_section), icon = Icons.Rounded.Settings) {
+                NavRow(
+                    stringResource(R.string.sens_title),
+                    if (state.sensitivityChanged == 0) {
+                        stringResource(R.string.sens_open_desc_default)
+                    } else {
+                        stringResource(R.string.sens_open_desc_changed, state.sensitivityChanged)
+                    },
+                    onOpenSensitivity,
+                    emoji = "🎚️",
+                )
                 SwitchRow(
                     title = stringResource(R.string.power_save_title),
                     description = stringResource(R.string.power_save_desc),

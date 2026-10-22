@@ -7,6 +7,8 @@ import com.gesturecontrol.gestures.HandFrame
 import com.gesturecontrol.gestures.HandPose
 import com.gesturecontrol.gestures.Landmark
 import com.gesturecontrol.gestures.LandmarkCsv
+import com.gesturecontrol.gestures.Sensitivity
+import com.gesturecontrol.gestures.SensitivityMapping
 import com.gesturecontrol.gestures.StabilityConfig
 import com.gesturecontrol.gestures.ml.DenseMlp
 import com.gesturecontrol.gestures.ml.PoseClassifier
@@ -152,6 +154,11 @@ val configs: Map<String, Pair<GestureConfig, PointerConfig>> by lazy {
                 scroll = basePointer.scroll.copy(minFrames = 3, confirmMs = 150),
             )
             ),
+        // User sensitivity: the same level for every gesture (Sensitivity / SensitivityMapping).
+        *(Sensitivity.MIN..Sensitivity.MAX).map { level ->
+            val sens = Sensitivity(level, level, level, level, level, level)
+            "sens$level" to (SensitivityMapping.apply(base, sens) to SensitivityMapping.apply(basePointer, sens))
+        }.toTypedArray(),
         "all" to (
             hands.copy(
                 stability = jumpSettle,

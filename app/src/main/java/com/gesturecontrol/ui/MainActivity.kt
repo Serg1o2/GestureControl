@@ -23,6 +23,7 @@ import com.gesturecontrol.ui.apps.AppSelectionScreen
 import com.gesturecontrol.ui.debug.DebugScreen
 import com.gesturecontrol.ui.main.AccessibilityDisclosureScreen
 import com.gesturecontrol.ui.main.MainScreen
+import com.gesturecontrol.ui.sensitivity.SensitivityScreen
 import com.gesturecontrol.ui.theme.GestureControlTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -45,6 +46,7 @@ class MainActivity : ComponentActivity() {
                             onOpenZones = { nav.navigate(Routes.ZONES) },
                             onOpenCursorSettings = { nav.navigate(Routes.CURSOR_SETTINGS) },
                             onOpenCustom = { nav.navigate(Routes.CUSTOM) },
+                            onOpenSensitivity = { nav.navigate(Routes.SENSITIVITY) },
                         )
                     }
                     composable(Routes.CURSOR_SETTINGS) {
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
                             onCalibrate = { nav.navigate(Routes.CALIBRATION) },
                         )
                     }
+                    composable(Routes.SENSITIVITY) { SensitivityScreen(onBack = { nav.popBackStack() }) }
                     composable(Routes.CALIBRATION) { CalibrationScreen(onDone = { nav.popBackStack() }) }
                     composable(Routes.CUSTOM) {
                         CustomGesturesScreen(
@@ -103,4 +106,5 @@ object Routes {
     const val CALIBRATION = "calibration"
     const val CUSTOM = "custom"
     const val CUSTOM_EDITOR = "custom_editor"
+    const val SENSITIVITY = "sensitivity"
 }

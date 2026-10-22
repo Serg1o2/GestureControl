@@ -243,4 +243,33 @@
     <string name="setup_all_done">All set: everything is granted</string>
     <string name="action_show">Show</string>
     <string name="action_hide">Hide</string>
+
+    <!-- Gesture sensitivity -->
+    <string name="sens_title_short">Sensitivity</string>
+    <string name="sens_title">Gesture sensitivity</string>
+    <string name="sens_reset">Reset</string>
+    <string name="sens_intro">Higher sensitivity catches smaller and slower movements, but the app also reacts more often to random hand motion. On test recordings, maximum sensitivity for all gestures gave about twice as many false triggers, minimum about half as many.</string>
+    <string name="sens_swipe">Hand swipe</string>
+    <string name="sens_swipe_desc">How long and fast the swipe must be</string>
+    <string name="sens_finger">Finger flick</string>
+    <string name="sens_finger_desc">Length and speed of the index finger flick</string>
+    <string name="sens_palm">Open palm</string>
+    <string name="sens_palm_desc">How long to hold the palm and how still</string>
+    <string name="sens_palm_value">Hold time: %1$s s</string>
+    <string name="sens_fist">Opening the fist</string>
+    <string name="sens_fist_desc">How long to show the fist and how fast to open it</string>
+    <string name="sens_pinch">Pinch (press)</string>
+    <string name="sens_pinch_desc">How close thumb and index must come and how quickly</string>
+    <string name="sens_scroll">Two-finger scroll</string>
+    <string name="sens_scroll_desc">Length of the stroke and the confirmation delay</string>
+    <string name="sens_less">Fewer false triggers</string>
+    <string name="sens_more">Reacts more easily</string>
+    <string name="sens_level_min">Minimum</string>
+    <string name="sens_level_low">Lower</string>
+    <string name="sens_level_default">Standard</string>
+    <string name="sens_level_high">Higher</string>
+    <string name="sens_level_max">Maximum</string>
+    <string name="sens_hint">Changes apply right away. Check them on the debug screen: it uses the same settings and shows the last recognized gesture.</string>
+    <string name="sens_open_desc_default">Standard for all gestures</string>
+    <string name="sens_open_desc_changed">Changed for %1$d of 6 gestures</string>
 </resources>

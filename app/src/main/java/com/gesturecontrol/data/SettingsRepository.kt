@@ -6,8 +6,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.gesturecontrol.gestures.Sensitivity
 import com.gesturecontrol.gestures.mapping.ScreenMapper
 import com.gesturecontrol.gestures.pointer.PointerConfig
 import com.gesturecontrol.gestures.pointer.PressMode
@@ -77,6 +79,30 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         store.edit { it[DEAD_ZONE] = value }
     }
 
+    /** Per-gesture sensitivity levels (0 = defaults); out-of-range stored values are clamped. */
+    val sensitivity: Flow<Sensitivity> = store.data.map { prefs ->
+        fun level(key: Preferences.Key<Int>) = (prefs[key] ?: 0).coerceIn(Sensitivity.MIN, Sensitivity.MAX)
+        Sensitivity(
+            swipe = level(SENS_SWIPE),
+            finger = level(SENS_FINGER),
+            palmHold = level(SENS_PALM),
+            fistOpen = level(SENS_FIST),
+            pinch = level(SENS_PINCH),
+            scroll = level(SENS_SCROLL),
+        )
+    }
+
+    suspend fun setSensitivity(value: Sensitivity) {
+        store.edit {
+            it[SENS_SWIPE] = value.swipe
+            it[SENS_FINGER] = value.finger
+            it[SENS_PALM] = value.palmHold
+            it[SENS_FIST] = value.fistOpen
+            it[SENS_PINCH] = value.pinch
+            it[SENS_SCROLL] = value.scroll
+        }
+    }
+
     /** Null resets to the default (uncalibrated) mapping. */
     suspend fun setCalibration(mapper: ScreenMapper?) {
         store.edit { if (mapper == null) it.remove(CALIBRATION) else it[CALIBRATION] = mapper.serialize() }
@@ -89,5 +115,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val DEAD_ZONE = floatPreferencesKey("dead_zone")
         val CALIBRATION = stringPreferencesKey("calibration")
         val CLASSIFIER = stringPreferencesKey("pose_classifier")
+        val SENS_SWIPE = intPreferencesKey("sens_swipe")
+        val SENS_FINGER = intPreferencesKey("sens_finger")
+        val SENS_PALM = intPreferencesKey("sens_palm_hold")
+        val SENS_FIST = intPreferencesKey("sens_fist_open")
+        val SENS_PINCH = intPreferencesKey("sens_pinch")
+        val SENS_SCROLL = intPreferencesKey("sens_scroll")
     }
 }

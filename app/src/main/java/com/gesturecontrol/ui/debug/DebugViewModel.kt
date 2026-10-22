@@ -12,6 +12,7 @@ import com.gesturecontrol.camera.CameraController
 import com.gesturecontrol.gestures.EngineState
 import com.gesturecontrol.gestures.Gesture
 import com.gesturecontrol.gestures.GestureConfig
+import com.gesturecontrol.gestures.SensitivityMapping
 import com.gesturecontrol.gestures.GestureEngine
 import com.gesturecontrol.gestures.Landmark
 import com.gesturecontrol.gestures.PowerSaveConfig
@@ -92,9 +93,13 @@ class DebugViewModel @Inject constructor(
             classifiers?.let { old -> camera.runOnAnalysisThread { old.close() } }
             val poseClassifiers = withContext(Dispatchers.Default) { classifierFactory.create(settings.classifierKind.first()) }
             classifiers = poseClassifiers
-            val pointer = PointerEngine(pointerSettings.toConfig(), poseClassifier = poseClassifiers.forPointer)
+            val sensitivity = settings.sensitivity.first()
+            val pointer = PointerEngine(
+                SensitivityMapping.apply(pointerSettings.toConfig(), sensitivity),
+                poseClassifier = poseClassifiers.forPointer,
+            )
                 .also { it.mapper = pointerSettings.mapper }
-            val gestures = GestureEngine(GestureConfig(), poseClassifiers.forGestures)
+            val gestures = GestureEngine(SensitivityMapping.apply(GestureConfig(), sensitivity), poseClassifiers.forGestures)
             val analyzer = HandAnalyzer(engine, gestures, throttler, pointer, onResult = ::onResult)
             camera.bind(owner, analyzer, rotation, surfaceProvider)
         }

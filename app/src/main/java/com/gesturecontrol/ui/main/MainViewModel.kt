@@ -24,6 +24,8 @@ data class MainUiState(
     val classifier: ClassifierKind = ClassifierKind.MODEL,
     /** What is really running; null until the camera has been bound once. */
     val classifierStatus: ClassifierStatus? = null,
+    /** How many gestures have a non-default sensitivity. */
+    val sensitivityChanged: Int = 0,
 )
 
 @HiltViewModel
@@ -39,9 +41,9 @@ class MainViewModel @Inject constructor(
         selectedApps.selectedPackages,
         settings.powerSaveEnabled,
         settings.classifierKind,
-        classifierFactory.status,
-    ) { status, selected, powerSave, kind, classifierStatus ->
-        MainUiState(status, selected.size, powerSave, kind, classifierStatus.takeIf { it.requested == kind })
+        combine(classifierFactory.status, settings.sensitivity) { classifierStatus, sensitivity -> classifierStatus to sensitivity },
+    ) { status, selected, powerSave, kind, (classifierStatus, sensitivity) ->
+        MainUiState(status, selected.size, powerSave, kind, classifierStatus.takeIf { it.requested == kind }, sensitivity.changedCount)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MainUiState())
 
     fun setPowerSave(enabled: Boolean) {

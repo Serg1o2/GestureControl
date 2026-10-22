@@ -37,7 +37,7 @@ class MainScreenScreenshotTest {
                     snackbar = SnackbarHostState(),
                     onToggle = {}, onRequestCamera = {}, onRequestNotifications = {},
                     onOpenAccessibilityDisclosure = {}, onOpenApps = {}, onOpenZones = {},
-                    onOpenCursorSettings = {}, onOpenCustom = {}, onOpenDebug = {},
+                    onOpenCursorSettings = {}, onOpenCustom = {}, onOpenDebug = {}, onOpenSensitivity = {},
                     onPowerSaveChange = {}, onUseModelChange = {},
                     scrollState = ScrollState(scrollPx),
                 )
